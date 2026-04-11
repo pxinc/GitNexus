@@ -29,6 +29,10 @@ let Kotlin: any = null;
 try {
   Kotlin = _require('tree-sitter-kotlin');
 } catch {}
+let ArkTS: any = null;
+try {
+  ArkTS = _require('tree-sitter-arkts');
+} catch {}
 
 let parser: Parser | null = null;
 
@@ -49,6 +53,10 @@ const languageMap: Record<string, any> = {
   [SupportedLanguages.Vue]: TypeScript.typescript,
   ...(Dart ? { [SupportedLanguages.Dart]: Dart } : {}),
   ...(Swift ? { [SupportedLanguages.Swift]: Swift } : {}),
+  // ArkTS uses tree-sitter-arkts (requires tree-sitter 0.25+)
+  ...(ArkTS
+    ? { [SupportedLanguages.ArkTS]: ArkTS }
+    : { [SupportedLanguages.ArkTS]: TypeScript.typescript }),
 };
 
 export const isLanguageAvailable = (language: SupportedLanguages): boolean =>

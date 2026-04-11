@@ -18,7 +18,7 @@ import { getTreeSitterBufferSize, TREE_SITTER_MAX_BUFFER } from '../constants.js
 import type { SymbolTable } from '../symbol-table.js';
 
 /** Language grammar type accepted by Parser.setLanguage(). */
-type TreeSitterLanguage = Parameters<typeof Parser.prototype.setLanguage>[0];
+type TreeSitterLanguage = any; // tree-sitter 0.25 language objects from 0.23.x packages don't match strict type
 
 // tree-sitter-swift is an optionalDependency — may not be installed
 const _require = createRequire(import.meta.url);
@@ -37,6 +37,10 @@ try {
 let Kotlin: TreeSitterLanguage | null = null;
 try {
   Kotlin = _require('tree-sitter-kotlin');
+} catch {}
+let ArkTS: TreeSitterLanguage | null = null;
+try {
+  ArkTS = _require('tree-sitter-arkts');
 } catch {}
 import { getLanguageFromFilename } from 'gitnexus-shared';
 import {
@@ -318,6 +322,10 @@ const languageMap: Record<string, TreeSitterLanguage> = {
   [SupportedLanguages.Vue]: TypeScript.typescript,
   ...(Dart ? { [SupportedLanguages.Dart]: Dart } : {}),
   ...(Swift ? { [SupportedLanguages.Swift]: Swift } : {}),
+  // ArkTS uses tree-sitter-arkts (requires tree-sitter 0.25+)
+  ...(ArkTS
+    ? { [SupportedLanguages.ArkTS]: ArkTS }
+    : { [SupportedLanguages.ArkTS]: TypeScript.typescript }),
 };
 
 /**

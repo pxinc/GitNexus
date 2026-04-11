@@ -20,6 +20,8 @@ export enum SupportedLanguages {
   Swift = 'swift',
   Dart = 'dart',
   Vue = 'vue',
+  /** ArkTS — HarmonyOS UI framework language (superset of TypeScript). */
+  ArkTS = 'arkts',
   /** Standalone regex processor — no tree-sitter, no LanguageProvider. */
   Cobol = 'cobol',
 }

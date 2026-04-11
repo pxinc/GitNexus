@@ -1174,6 +1174,144 @@ export const DART_QUERIES = `
       (type_identifier) @heritage.trait))) @heritage
 `;
 
+// ArkTS queries — TypeScript parser with ArkTS-specific patterns
+// ArkTS uses tree-sitter-typescript; struct keyword produces ERROR nodes,
+// so we avoid struct_declaration patterns. UI component calls (Text, Button,
+// Column, etc.) are already captured by the generic call_expression patterns
+// inherited from TYPESCRIPT_QUERIES.
+export const ARKTS_QUERIES = `
+; ── Inherit all TypeScript base queries ──────────────────────────────────────
+(class_declaration
+  name: (type_identifier) @name) @definition.class
+
+(abstract_class_declaration
+  name: (type_identifier) @name) @definition.class
+
+(interface_declaration
+  name: (type_identifier) @name) @definition.interface
+
+(function_declaration
+  name: (identifier) @name) @definition.function
+
+(function_signature
+  name: (identifier) @name) @definition.function
+
+(method_definition
+  name: (property_identifier) @name) @definition.method
+
+(method_definition
+  name: (private_property_identifier) @name) @definition.method
+
+(abstract_method_signature
+  name: (property_identifier) @name) @definition.method
+
+(method_signature
+  name: (property_identifier) @name) @definition.method
+
+(lexical_declaration
+  (variable_declarator
+    name: (identifier) @name
+    value: (arrow_function))) @definition.function
+
+(lexical_declaration
+  (variable_declarator
+    name: (identifier) @name
+    value: (function_expression))) @definition.function
+
+(export_statement
+  declaration: (lexical_declaration
+    (variable_declarator
+      name: (identifier) @name
+      value: (arrow_function)))) @definition.function
+
+(export_statement
+  declaration: (lexical_declaration
+    (variable_declarator
+      name: (identifier) @name
+      value: (function_expression)))) @definition.function
+
+(import_statement
+  source: (string) @import.source) @import
+
+(export_statement
+  source: (string) @import.source) @import
+
+(call_expression
+  function: (identifier) @call.name) @call
+
+(call_expression
+  function: (member_expression
+    property: (property_identifier) @call.name)) @call
+
+(new_expression
+  constructor: (identifier) @call.name) @call
+
+(public_field_definition
+  name: (property_identifier) @name) @definition.property
+
+(public_field_definition
+  name: (private_property_identifier) @name) @definition.property
+
+(required_parameter
+  (accessibility_modifier)
+  pattern: (identifier) @name) @definition.property
+
+; ── Heritage ─────────────────────────────────────────────────────────────────
+(class_declaration
+  name: (type_identifier) @heritage.class
+  (class_heritage
+    (extends_clause
+      value: (identifier) @heritage.extends))) @heritage
+
+(class_declaration
+  name: (type_identifier) @heritage.class
+  (class_heritage
+    (implements_clause
+      (type_identifier) @heritage.implements))) @heritage.impl
+
+; ── Assignments ──────────────────────────────────────────────────────────────
+(assignment_expression
+  left: (member_expression
+    object: (_) @assignment.receiver
+    property: (property_identifier) @assignment.property)
+  right: (_)) @assignment
+
+(augmented_assignment_expression
+  left: (member_expression
+    object: (_) @assignment.receiver
+    property: (property_identifier) @assignment.property)
+  right: (_)) @assignment
+
+; ── HTTP consumers ───────────────────────────────────────────────────────────
+(call_expression
+  function: (identifier) @_fetch_fn (#eq? @_fetch_fn "fetch")
+  arguments: (arguments
+    [(string (string_fragment) @route.url)
+     (template_string) @route.template_url])) @route.fetch
+
+(call_expression
+  function: (member_expression
+    property: (property_identifier) @http_client.method)
+  arguments: (arguments
+    (string (string_fragment) @http_client.url))) @http_client
+
+; ── Decorators: @Component, @Entry, @State, @Builder, etc. ──────────────────
+(decorator
+  (call_expression
+    function: (identifier) @decorator.name
+    arguments: (arguments (string (string_fragment) @decorator.arg)?))) @decorator
+
+(decorator
+  (identifier) @decorator.name) @decorator
+
+; ── Express/Hono route registration ─────────────────────────────────────────
+(call_expression
+  function: (member_expression
+    property: (property_identifier) @express_route.method)
+  arguments: (arguments
+    (string (string_fragment) @express_route.path))) @express_route
+`;
+
 import { SupportedLanguages } from 'gitnexus-shared';
 
 export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
@@ -1192,5 +1330,6 @@ export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
   [SupportedLanguages.Swift]: SWIFT_QUERIES,
   [SupportedLanguages.Dart]: DART_QUERIES,
   [SupportedLanguages.Vue]: TYPESCRIPT_QUERIES, // Vue <script> blocks are parsed as TypeScript
+  [SupportedLanguages.ArkTS]: ARKTS_QUERIES, // ArkTS uses TS parser with ArkTS-specific patterns
   [SupportedLanguages.Cobol]: '', // Standalone regex processor — no tree-sitter queries
 };
