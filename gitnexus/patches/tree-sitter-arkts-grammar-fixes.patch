@@ -16,36 +16,45 @@
 <       seq('Button', '(', optional(choice($.expression, $.component_parameters)), ')', optional($.container_content_body)),  // Button 也可以有子组件
 ---
 >       seq('Button', '(', optional(seq($.expression, optional(seq(',', $.component_parameters)))), ')', optional($.container_content_body)),  // Button 支持 1-2 个参数
-453a463
+379c388,391
+<     arkts_ui_element: $ => $.ui_element_with_modifiers,
+---
+>     arkts_ui_element: $ => seq(
+>       $.ui_element_with_modifiers,
+>       optional(';')  // 允许 UI 声明后的分号
+>     ),
+453a466
 >     private_field_identifier: $ => /#[a-zA-Z_$][a-zA-Z0-9_$]*/,  // JS private fields (#x)
-494c504,505
+494c507,508
 <       $.non_null_assertion_expression  // 非空断言表达式 (value!)
 ---
 >       $.non_null_assertion_expression,  // 非空断言表达式 (value!)
 >       $.type_assertion                  // 类型断言 (<Type>value)
-572a584,589
+572a587,592
 >     // 类型断言 (<Type>value) — 旧式 TS 类型断言，ArkTS 中仍有使用
 >     type_assertion: $ => prec.left(2, seq(
 >       $.type_arguments,
 >       $.expression
 >     )),
 > 
-605a623
+605a626
 >       $.object_type,     // 对象类型，如 { x: number, y: string }
-651c669,672
+651c672,677
 <         $.identifier
 ---
 >         $.identifier,
 >         $.generic_type,
 >         $.object_type,
+>         $.qualified_type,
+>         $.tuple_type,
 >         $.parenthesized_type
-756a778
+756a783
 >       optional(choice('public', 'private', 'protected', 'readonly')),  // 构造函数参数修饰符
-947c969
+947c974
 <         $.identifier
 ---
 >         choice($.identifier, $.private_field_identifier)
-953c975
+953c980
 <         $.identifier
 ---
 >         choice($.identifier, $.private_field_identifier)
