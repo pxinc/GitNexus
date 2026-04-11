@@ -1,37 +1,37 @@
---- grammar.js.bak	2026-04-12 00:15:18
-+++ grammar.js	2026-04-12 00:17:56
-@@ -75,6 +75,11 @@
-     [$.expression, $.primary_type, $.parameter],  // 括号类型与函数参数列表的三方冲突
-     [$.parenthesized_expression, $.parenthesized_type],  // 括号表达式与括号类型的冲突
-     [$.conditional_expression, $.conditional_type]  // 条件表达式与条件类型的冲突
-+    , [$.type_assertion, $.call_expression]  // <Type>value 类型断言与泛型调用 <T>() 的歧义
-+    , [$.type_assertion, $.binary_expression]  // <Type>value 中 < 既是比较运算符也是类型参数开始
-+    , [$.type_assertion, $.expression]  // type_assertion 与 expression 的歧义
-+    , [$.type_assertion, $.binary_expression, $.call_expression]  // 三方歧义：<Type>expr vs comparison vs generic call
-+    , [$.type_assertion, $.call_expression, $.member_expression, $.subscript_expression]  // 四方歧义
-   ],
- 
-   rules: {
-@@ -491,7 +496,8 @@
-       $.template_literal,          // 模板字面量
-       $.resource_expression,       // $r()资源表达式
-       $.update_expression,         // ++/--表达式
--      $.non_null_assertion_expression  // 非空断言表达式 (value!)
-+      $.non_null_assertion_expression,  // 非空断言表达式 (value!)
-+      $.type_assertion                  // 类型断言 (<Type>value)
-     ),
- 
-     // 状态绑定表达式（$语法）
-@@ -568,6 +574,12 @@
-       $.expression,
-       'as',
-       $.type_annotation
-+    )),
-+
-+    // 类型断言 (<Type>value) — 旧式 TS 类型断言，ArkTS 中仍有使用
-+    type_assertion: $ => prec.left(2, seq(
-+      $.type_arguments,
-+      $.expression
-     )),
- 
-     // 动态 import() 表达式
+77a78,86
+>     , [$.type_assertion, $.call_expression]  // <Type>value 类型断言与泛型调用 <T>() 的歧义
+>     , [$.type_assertion, $.binary_expression]  // <Type>value 中 < 既是比较运算符也是类型参数开始
+>     , [$.type_assertion, $.expression]  // type_assertion 与 expression 的歧义
+>     , [$.type_assertion, $.binary_expression, $.call_expression]  // 三方歧义：<Type>expr vs comparison vs generic call
+>     , [$.type_assertion, $.call_expression, $.member_expression, $.subscript_expression]  // 四方歧义
+>     , [$.object_type, $.block_statement]  // { x: number } 类型 vs 块语句歧义
+>     , [$.object_type, $.object_literal]  // { x: number } 类型 vs 对象字面量歧义
+>     , [$.type_member, $.property_name]  // 类型成员 vs 属性名歧义
+>     , [$.block_statement, $.object_type, $.object_literal]  // {} 三方歧义
+352c361
+<       seq('Button', '(', optional(choice($.expression, $.component_parameters)), ')', optional($.container_content_body)),  // Button 也可以有子组件
+---
+>       seq('Button', '(', optional(seq($.expression, optional(seq(',', $.component_parameters)))), ')', optional($.container_content_body)),  // Button 支持 1-2 个参数
+494c503,504
+<       $.non_null_assertion_expression  // 非空断言表达式 (value!)
+---
+>       $.non_null_assertion_expression,  // 非空断言表达式 (value!)
+>       $.type_assertion                  // 类型断言 (<Type>value)
+572a583,588
+>     // 类型断言 (<Type>value) — 旧式 TS 类型断言，ArkTS 中仍有使用
+>     type_assertion: $ => prec.left(2, seq(
+>       $.type_arguments,
+>       $.expression
+>     )),
+> 
+605a622
+>       $.object_type,     // 对象类型，如 { x: number, y: string }
+651c668,671
+<         $.identifier
+---
+>         $.identifier,
+>         $.generic_type,
+>         $.object_type,
+>         $.parenthesized_type
+756a777
+>       optional(choice('public', 'private', 'protected', 'readonly')),  // 构造函数参数修饰符
