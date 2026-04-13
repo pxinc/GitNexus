@@ -47,7 +47,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "prepare": "node scripts/build.js",
-    "prepack": "node scripts/build.js"
+    "prepack": "node scripts/build.js",
+    "postinstall": "bash scripts/patch-tree-sitter-arkts.sh"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.0.0",

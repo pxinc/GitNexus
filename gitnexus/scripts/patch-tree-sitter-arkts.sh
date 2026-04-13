@@ -1,32 +1,35 @@
 #!/bin/bash
-# Apply type_assertion patch to tree-sitter-arkts grammar
-# Usage: bash scripts/patch-tree-sitter-arkts.sh
+# Postinstall script: patch tree-sitter-arkts with our custom grammar
+# Runs after npm install to apply grammar fixes and rebuild native addon.
+# Another machine can use the patched parser after npm install.
+
 set -e
 
-PATCH_DIR="$(cd "$(dirname "$0")/.." && pwd)/patches"
-ARKTS_DIR="$(cd "$(dirname "$0")/.." && pwd)/node_modules/tree-sitter-arkts"
+PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+VENDOR_DIR="$PROJECT_DIR/vendor/tree-sitter-arkts"
+TARGET_DIR="$PROJECT_DIR/node_modules/tree-sitter-arkts"
 
-if [ ! -d "$ARKTS_DIR" ]; then
-  echo "tree-sitter-arkts not found, skipping patch"
+if [ ! -d "$TARGET_DIR" ]; then
+  echo "[tree-sitter-arkts-patch] node_modules/tree-sitter-arkts not found, skipping"
   exit 0
 fi
 
-# Check if already patched
-if grep -q "type_assertion" "$ARKTS_DIR/grammar.js" 2>/dev/null; then
-  echo "tree-sitter-arkts already patched with type_assertion"
+if [ ! -f "$VENDOR_DIR/grammar.js" ]; then
+  echo "[tree-sitter-arkts-patch] vendor/tree-sitter-arkts/grammar.js not found, skipping"
   exit 0
 fi
 
-echo "Patching tree-sitter-arkts grammar..."
-cd "$ARKTS_DIR"
+echo "[tree-sitter-arkts-patch] Patching tree-sitter-arkts with custom grammar..."
 
-# Apply grammar patch
-patch -p0 < "$PATCH_DIR/tree-sitter-arkts-type-assertion.patch"
+# 1. Copy grammar.js and parser.c
+cp "$VENDOR_DIR/grammar.js" "$TARGET_DIR/grammar.js"
+cp "$VENDOR_DIR/src/parser.c" "$TARGET_DIR/src/parser.c"
 
-# Regenerate parser
-npx tree-sitter generate
+# 2. Regenerate parser.c (ensures compatibility with current tree-sitter version)
+cd "$TARGET_DIR"
+npx tree-sitter generate 2>&1 || echo "[tree-sitter-arkts-patch] Warning: tree-sitter generate had issues (check conflicts)"
 
-# Rebuild native binding
-npx node-gyp rebuild
+# 3. Rebuild native addon
+npx node-gyp rebuild 2>&1
 
-echo "tree-sitter-arkts patched and rebuilt successfully"
+echo "[tree-sitter-arkts-patch] Done. tree-sitter-arkts patched and rebuilt."
