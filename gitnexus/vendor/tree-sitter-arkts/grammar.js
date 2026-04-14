@@ -105,6 +105,7 @@ module.exports = grammar({
     // 导入声明
     import_declaration: $ => seq(
       'import',
+      optional('type'),
       choice(
         // 混合导入：import defaultExport, { namedExport } from '...'
         seq(
@@ -114,9 +115,9 @@ module.exports = grammar({
           'from',
           $.string_literal
         ),
-        // 默认导入：import identifier from '...'
+        // 默认导入：import [type] identifier from '...'
         seq($.identifier, 'from', $.string_literal),
-        // 命名导入：import { ... } from '...'
+        // 命名导入：import [type] { ... } from '...'
         seq('{', commaSep($.import_specifier), '}', 'from', $.string_literal),
         // 全部导入：import * as identifier from '...'
         seq('*', 'as', $.identifier, 'from', $.string_literal)
@@ -345,15 +346,15 @@ module.exports = grammar({
     ui_component: $ => prec.right(3, choice(
       // 基础组件
       seq('Text', '(', $.expression, ')'),
-      seq('Button', '(', optional(choice($.expression, $.component_parameters)), ')', optional($.container_content_body)),  // Button 也可以有子组件
+      seq('Button', '(', optional($.expression), ')', optional($.container_content_body)),  // Button 也可以有子组件
       seq('Image', '(', $.expression, ')'),
-      seq(choice('TextInput', 'TextArea'), '(', optional($.component_parameters), ')'),
+      seq(choice('TextInput', 'TextArea'), '(', optional($.expression), ')'),
       // 布局容器 - 使用专门的容器内容体
-      seq(choice('Column', 'Row', 'Stack', 'Flex', 'Grid', 'GridRow', 'GridCol', 'List', 'ScrollList', 'NavDestination'), '(', optional($.component_parameters), ')', optional($.container_content_body)),
+      seq(choice('Column', 'Row', 'Stack', 'Flex', 'Grid', 'GridRow', 'GridCol', 'List', 'ScrollList', 'NavDestination'), '(', optional($.expression), ')', optional($.container_content_body)),
       // 特殊容器项
-      seq(choice('ListItem', 'GridItem', 'ListItemGroup'), '(', optional($.component_parameters), ')', optional($.container_content_body)),
+      seq(choice('ListItem', 'GridItem', 'ListItemGroup'), '(', optional($.expression), ')', optional($.container_content_body)),
       // 自定义组件 - 支持容器内容体
-      seq($.identifier, '(', optional(choice($.component_parameters, commaSep($.expression))), ')', optional($.container_content_body))
+      seq($.identifier, '(', optional(commaSep($.expression)), ')', optional($.container_content_body))
     )),
 
     // 容器内容体 - 专门用于布局容器的内容，区别于build_body
