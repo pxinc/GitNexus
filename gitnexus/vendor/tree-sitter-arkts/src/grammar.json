@@ -1305,7 +1305,19 @@
             "members": [
               {
                 "type": "SYMBOL",
+                "name": "statement"
+              },
+              {
+                "type": "SYMBOL",
                 "name": "block_statement"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "arkts_ui_element"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "modifier_chain_expression"
               },
               {
                 "type": "SYMBOL",
@@ -1804,7 +1816,19 @@
             "members": [
               {
                 "type": "SYMBOL",
+                "name": "statement"
+              },
+              {
+                "type": "SYMBOL",
                 "name": "block_statement"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "arkts_ui_element"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "modifier_chain_expression"
               },
               {
                 "type": "SYMBOL",
@@ -2178,7 +2202,7 @@
       "type": "TOKEN",
       "content": {
         "type": "PREC",
-        "value": 1,
+        "value": -1,
         "content": {
           "type": "PATTERN",
           "value": "[^{}]+"
@@ -3874,7 +3898,7 @@
               "value": 3,
               "content": {
                 "type": "SYMBOL",
-                "name": "builder_function_body"
+                "name": "block_statement"
               }
             },
             {
@@ -3882,7 +3906,7 @@
               "value": 2,
               "content": {
                 "type": "SYMBOL",
-                "name": "extend_function_body"
+                "name": "builder_function_body"
               }
             },
             {
@@ -3890,7 +3914,7 @@
               "value": 1,
               "content": {
                 "type": "SYMBOL",
-                "name": "block_statement"
+                "name": "extend_function_body"
               }
             },
             {
@@ -4052,7 +4076,11 @@
               },
               {
                 "type": "SYMBOL",
-                "name": "_non_brace_content"
+                "name": "statement"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "comment"
               }
             ]
           }
@@ -4752,7 +4780,19 @@
             "members": [
               {
                 "type": "SYMBOL",
+                "name": "statement"
+              },
+              {
+                "type": "SYMBOL",
                 "name": "block_statement"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "arkts_ui_element"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "modifier_chain_expression"
               },
               {
                 "type": "SYMBOL",
@@ -5616,7 +5656,7 @@
               "value": 2,
               "content": {
                 "type": "SYMBOL",
-                "name": "builder_function_body"
+                "name": "block_statement"
               }
             },
             {
@@ -5624,12 +5664,12 @@
               "value": 1,
               "content": {
                 "type": "SYMBOL",
-                "name": "extend_function_body"
+                "name": "builder_function_body"
               }
             },
             {
               "type": "SYMBOL",
-              "name": "block_statement"
+              "name": "extend_function_body"
             }
           ]
         }
@@ -5652,7 +5692,19 @@
               "members": [
                 {
                   "type": "SYMBOL",
+                  "name": "statement"
+                },
+                {
+                  "type": "SYMBOL",
                   "name": "block_statement"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "arkts_ui_element"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "modifier_chain_expression"
                 },
                 {
                   "type": "SYMBOL",
@@ -5751,7 +5803,19 @@
               "members": [
                 {
                   "type": "SYMBOL",
+                  "name": "statement"
+                },
+                {
+                  "type": "SYMBOL",
                   "name": "block_statement"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "arkts_ui_element"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "modifier_chain_expression"
                 },
                 {
                   "type": "SYMBOL",
@@ -6551,6 +6615,11 @@
       "ui_arrow_function_body"
     ],
     [
+      "block_statement",
+      "builder_function_body",
+      "extend_function_body"
+    ],
+    [
       "ui_if_statement",
       "block_statement",
       "object_literal"
@@ -6687,6 +6756,10 @@
     [
       "variable_declaration",
       "enum_declaration"
+    ],
+    [
+      "variable_declaration",
+      "for_statement"
     ],
     [
       "variable_declaration"

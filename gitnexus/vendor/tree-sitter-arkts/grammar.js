@@ -319,7 +319,7 @@ module.exports = grammar({
     // 注意：$.comment 不需要显式匹配，因为它已在 extras 中定义（会被自动跳过）
     build_body: $ => seq(
       '{',
-      repeat(choice($.statement, $.block_statement, $._non_brace_content)),
+      repeat(choice($.statement, $.block_statement, $.arkts_ui_element, $.modifier_chain_expression, $._non_brace_content)),
       '}'
     ),
 
@@ -360,7 +360,7 @@ module.exports = grammar({
     // 注意：$.comment 不需要显式匹配，因为它已在 extras 中定义（会被自动跳过）
     container_content_body: $ => seq(
       '{',
-      repeat(choice($.statement, $.block_statement, $._non_brace_content)),
+      repeat(choice($.statement, $.block_statement, $.arkts_ui_element, $.modifier_chain_expression, $._non_brace_content)),
       '}'
     ),
 
@@ -887,7 +887,7 @@ module.exports = grammar({
     // UI箭头函数体 - 用于ForEach等UI上下文中的箭头函数，支持直接返回UI元素
     ui_arrow_function_body: $ => seq(
       '{',
-      repeat(choice($.statement, $.block_statement, $._non_brace_content)),
+      repeat(choice($.statement, $.block_statement, $.arkts_ui_element, $.modifier_chain_expression, $._non_brace_content)),
       '}'
     ),
 
@@ -1064,7 +1064,7 @@ module.exports = grammar({
     // @Builder 函数体 - 与 build_body 相同，支持 UI 组件
     builder_function_body: $ => prec(3, seq(
       '{',
-      repeat(choice($.statement, $.block_statement, $._non_brace_content)),
+      repeat(choice($.statement, $.block_statement, $.arkts_ui_element, $.modifier_chain_expression, $._non_brace_content)),
       '}'
     )),
 
@@ -1082,7 +1082,7 @@ module.exports = grammar({
     // 注意：$.comment 不需要显式匹配，因为它已在 extras 中定义（会被自动跳过）
     extend_function_body: $ => prec(2, seq(
       '{',
-      repeat(choice($.statement, $.block_statement, $._non_brace_content)),
+      repeat(choice($.statement, $.block_statement, $.arkts_ui_element, $.modifier_chain_expression, $._non_brace_content)),
       '}'
     )),
 
