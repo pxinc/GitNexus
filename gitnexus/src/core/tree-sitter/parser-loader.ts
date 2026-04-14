@@ -53,7 +53,8 @@ const languageMap: Record<string, any> = {
   [SupportedLanguages.Vue]: TypeScript.typescript,
   ...(Dart ? { [SupportedLanguages.Dart]: Dart } : {}),
   ...(Swift ? { [SupportedLanguages.Swift]: Swift } : {}),
-  // ArkTS uses tree-sitter-arkts (requires tree-sitter 0.25+)
+  // ArkTS uses tree-sitter-arkts with native ArkTS node types
+  // Falls back to TypeScript parser if tree-sitter-arkts is not installed
   ...(ArkTS
     ? { [SupportedLanguages.ArkTS]: ArkTS }
     : { [SupportedLanguages.ArkTS]: TypeScript.typescript }),

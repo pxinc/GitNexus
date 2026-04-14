@@ -652,6 +652,7 @@ describe('Tree-sitter multi-language parsing', () => {
         [SupportedLanguages.CSharp, 'simple.cs'],
         [SupportedLanguages.Rust, 'simple.rs'],
         [SupportedLanguages.PHP, 'simple.php'],
+        [SupportedLanguages.ArkTS, 'simple.ets'],
         // Dart and Swift are excluded — they are optionalDependencies that may not be installed
       ];
 

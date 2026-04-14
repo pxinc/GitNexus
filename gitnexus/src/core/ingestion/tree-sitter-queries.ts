@@ -1174,142 +1174,139 @@ export const DART_QUERIES = `
       (type_identifier) @heritage.trait))) @heritage
 `;
 
-// ArkTS queries — TypeScript parser with ArkTS-specific patterns
-// ArkTS uses tree-sitter-typescript; struct keyword produces ERROR nodes,
-// so we avoid struct_declaration patterns. UI component calls (Text, Button,
-// Column, etc.) are already captured by the generic call_expression patterns
-// inherited from TYPESCRIPT_QUERIES.
+// ArkTS queries — native tree-sitter-arkts node types
+// tree-sitter-arkts uses different node types than tree-sitter-typescript:
+//   identifier (not type_identifier/property_identifier),
+//   method_declaration (not method_definition),
+//   import_declaration/string_literal (not import_statement/string),
+//   variable_declaration (not lexical_declaration), etc.
 export const ARKTS_QUERIES = `
-; ── Inherit all TypeScript base queries ──────────────────────────────────────
+; ── Definitions ─────────────────────────────────────────────────────────────
+
+; Class
 (class_declaration
-  name: (type_identifier) @name) @definition.class
+  (identifier) @name) @definition.class
 
-(abstract_class_declaration
-  name: (type_identifier) @name) @definition.class
-
+; Interface
 (interface_declaration
-  name: (type_identifier) @name) @definition.interface
+  (identifier) @name) @definition.interface
 
-(function_declaration
-  name: (identifier) @name) @definition.function
+; Component/struct (@Component struct Foo { ... })
+(component_declaration
+  (identifier) @name) @definition.class
 
-(function_signature
-  name: (identifier) @name) @definition.function
+(component_declaration
+  .
+  (decorator) @decorator) @definition.class
 
-(method_definition
-  name: (property_identifier) @name) @definition.method
+; Exported component (@Component export struct Foo { ... })
+(decorated_export_declaration
+  (decorator)
+  (identifier) @name) @definition.class
 
-(method_definition
-  name: (private_property_identifier) @name) @definition.method
+; Method
+(method_declaration
+  (identifier) @name) @definition.method
 
-(abstract_method_signature
-  name: (property_identifier) @name) @definition.method
+; Property (class field with value)
+(property_declaration
+  (identifier) @name
+  (expression)) @definition.property
 
-(method_signature
-  name: (property_identifier) @name) @definition.method
+; Property (class field without value, just type annotation)
+(property_declaration
+  (identifier) @name
+  (type_annotation)) @definition.property
 
-(lexical_declaration
+; ── Functions (arrow + function expression in variable declarator) ───────────
+
+(variable_declaration
   (variable_declarator
-    name: (identifier) @name
-    value: (arrow_function))) @definition.function
+    (identifier) @name
+    (expression
+      (arrow_function)))) @definition.function
 
-(lexical_declaration
+(variable_declaration
   (variable_declarator
-    name: (identifier) @name
-    value: (function_expression))) @definition.function
+    (identifier) @name
+    (expression
+      (function_expression)))) @definition.function
 
-(export_statement
-  declaration: (lexical_declaration
-    (variable_declarator
-      name: (identifier) @name
-      value: (arrow_function)))) @definition.function
+; Top-level function declaration
+; tree-sitter-arkts produces function_expression under expression_statement
+(expression_statement
+  (expression
+    (function_expression
+      (identifier) @name
+      (parameter_list)
+      (type_annotation)?
+      (block_statement)))) @definition.function
 
-(export_statement
-  declaration: (lexical_declaration
-    (variable_declarator
-      name: (identifier) @name
-      value: (function_expression)))) @definition.function
+; ── Imports ──────────────────────────────────────────────────────────────────
 
-(import_statement
-  source: (string) @import.source) @import
+(import_declaration
+  (string_literal) @import.source) @import
 
-(export_statement
-  source: (string) @import.source) @import
+; Re-export (export { X } from "module")
+(export_declaration
+  (string_literal) @import.source) @import
+
+; ── Calls ────────────────────────────────────────────────────────────────────
 
 (call_expression
-  function: (identifier) @call.name) @call
+  (expression
+    (identifier)) @call.name
+  (argument_list)) @call
 
 (call_expression
-  function: (member_expression
-    property: (property_identifier) @call.name)) @call
+  (expression
+    (member_expression
+      (identifier) @call.name))
+  (argument_list)) @call
 
 (new_expression
-  constructor: (identifier) @call.name) @call
-
-(public_field_definition
-  name: (property_identifier) @name) @definition.property
-
-(public_field_definition
-  name: (private_property_identifier) @name) @definition.property
-
-(required_parameter
-  (accessibility_modifier)
-  pattern: (identifier) @name) @definition.property
+  (expression
+    (identifier)) @call.name) @call
 
 ; ── Heritage ─────────────────────────────────────────────────────────────────
+; extends: class Foo extends Bar — the parent type is in a bare type_annotation
 (class_declaration
-  name: (type_identifier) @heritage.class
-  (class_heritage
-    (extends_clause
-      value: (identifier) @heritage.extends))) @heritage
+  (identifier) @heritage.class
+  (type_annotation
+    (primary_type
+      (identifier) @heritage.extends))) @heritage
 
+; implements: class Foo implements IBaz
 (class_declaration
-  name: (type_identifier) @heritage.class
-  (class_heritage
-    (implements_clause
-      (type_identifier) @heritage.implements))) @heritage.impl
+  (identifier) @heritage.class
+  (implements_clause
+    (identifier) @heritage.implements)) @heritage.impl
+
+; ── Decorators ───────────────────────────────────────────────────────────────
+; Decorators attached to class/struct/component declarations
+(decorated_export_declaration
+  (decorator
+    (identifier) @decorator.name) @decorator)
+
+(component_declaration
+  (decorator
+    (identifier) @decorator.name) @decorator)
 
 ; ── Assignments ──────────────────────────────────────────────────────────────
 (assignment_expression
-  left: (member_expression
-    object: (_) @assignment.receiver
-    property: (property_identifier) @assignment.property)
-  right: (_)) @assignment
+  (member_expression
+    (expression
+      (identifier) @assignment.receiver)
+    (identifier) @assignment.property)
+  (expression)) @assignment
 
-(augmented_assignment_expression
-  left: (member_expression
-    object: (_) @assignment.receiver
-    property: (property_identifier) @assignment.property)
-  right: (_)) @assignment
-
-; ── HTTP consumers ───────────────────────────────────────────────────────────
+; ── HTTP / fetch consumers ───────────────────────────────────────────────────
 (call_expression
-  function: (identifier) @_fetch_fn (#eq? @_fetch_fn "fetch")
-  arguments: (arguments
-    [(string (string_fragment) @route.url)
-     (template_string) @route.template_url])) @route.fetch
-
-(call_expression
-  function: (member_expression
-    property: (property_identifier) @http_client.method)
-  arguments: (arguments
-    (string (string_fragment) @http_client.url))) @http_client
-
-; ── Decorators: @Component, @Entry, @State, @Builder, etc. ──────────────────
-(decorator
-  (call_expression
-    function: (identifier) @decorator.name
-    arguments: (arguments (string (string_fragment) @decorator.arg)?))) @decorator
-
-(decorator
-  (identifier) @decorator.name) @decorator
-
-; ── Express/Hono route registration ─────────────────────────────────────────
-(call_expression
-  function: (member_expression
-    property: (property_identifier) @express_route.method)
-  arguments: (arguments
-    (string (string_fragment) @express_route.path))) @express_route
+  (expression
+    (identifier)) @_fetch_fn (#eq? @_fetch_fn "fetch")
+  (argument_list
+    (expression
+      (string_literal) @route.url))) @route.fetch
 `;
 
 import { SupportedLanguages } from 'gitnexus-shared';
