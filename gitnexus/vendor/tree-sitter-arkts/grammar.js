@@ -40,6 +40,7 @@ module.exports = grammar({
     [$.block_statement, $.ui_arrow_function_body],  // 普通块语句与UI箭头函数体的歧义
     [$.statement, $.builder_function_body],  // 语句与 @Builder 函数体的歧义
     [$.statement, $.ui_arrow_function_body],  // 语句与UI箭头函数体的歧义
+    [$.block_statement, $.builder_function_body, $.extend_function_body],  // block_statement 与 Builder/Extend 函数体在 repeat 中的歧义
     [$.ui_if_statement, $.block_statement, $.object_literal],  // ui_if_statement 与 block_statement/object_literal 的歧义
     [$.expression, $.extend_function_body],  // 表达式与 @Extend 函数体的歧义（modifier_chain 既是 expression 也是 extend_function_body的开始）
     [$.arkts_ui_element, $.expression],  // UI元素既可以是arkts_ui_element也可以是expression（用于ForEach箭头函数返回值）
@@ -74,6 +75,7 @@ module.exports = grammar({
     [$.return_statement],  // optional semicolon 冲突
     [$.throw_statement],  // optional semicolon 冲突
     [$.variable_declaration, $.enum_declaration],  // const enum 歧义
+    [$.variable_declaration, $.for_statement],  // for(var x ...) 中 var 后的歧义
     [$.variable_declaration],  // optional semicolon 与 new expression 的冲突
     [$.property_declaration]  // optional semicolon 冲突
   ],
@@ -317,7 +319,7 @@ module.exports = grammar({
     // 注意：$.comment 不需要显式匹配，因为它已在 extras 中定义（会被自动跳过）
     build_body: $ => seq(
       '{',
-      repeat(choice($.block_statement, $._non_brace_content)),
+      repeat(choice($.statement, $.block_statement, $._non_brace_content)),
       '}'
     ),
 
@@ -358,7 +360,7 @@ module.exports = grammar({
     // 注意：$.comment 不需要显式匹配，因为它已在 extras 中定义（会被自动跳过）
     container_content_body: $ => seq(
       '{',
-      repeat(choice($.block_statement, $._non_brace_content)),
+      repeat(choice($.statement, $.block_statement, $._non_brace_content)),
       '}'
     ),
 
@@ -439,7 +441,7 @@ module.exports = grammar({
     // 基础语法元素
     identifier: $ => /[a-zA-Z_$][a-zA-Z0-9_$]*/,
     
-    _non_brace_content: $ => token(prec(1, /[^{}]+/)),
+    _non_brace_content: $ => token(prec(-1, /[^{}]+/)),
     
     string_literal: $ => token(choice(
       seq('"', repeat(choice(/[^"\\\n]/, seq('\\', /./), seq('\\', /\n/))), '"'),
@@ -727,9 +729,9 @@ module.exports = grammar({
       $.parameter_list,
       optional(seq(':', $.type_annotation)),
       choice(
-        prec(3, $.builder_function_body),  // @Builder 函数体（最高优先级）
-        prec(2, $.extend_function_body),   // @Extend 函数体
-        prec(1, $.block_statement),        // 普通函数体
+        prec(3, $.block_statement),        // 普通函数体（最高优先级）
+        prec(2, $.builder_function_body),  // @Builder 函数体
+        prec(1, $.extend_function_body),   // @Extend 函数体
         ';'                                // 抽象方法
       )
     ),
@@ -750,7 +752,7 @@ module.exports = grammar({
 
     block_statement: $ => seq(
       '{',
-      repeat(choice($.block_statement, $._non_brace_content)),
+      repeat(choice($.block_statement, $.statement, $.comment)),
       '}'
     ),
 
@@ -885,7 +887,7 @@ module.exports = grammar({
     // UI箭头函数体 - 用于ForEach等UI上下文中的箭头函数，支持直接返回UI元素
     ui_arrow_function_body: $ => seq(
       '{',
-      repeat(choice($.block_statement, $._non_brace_content)),
+      repeat(choice($.statement, $.block_statement, $._non_brace_content)),
       '}'
     ),
 
@@ -1053,16 +1055,16 @@ module.exports = grammar({
       $.parameter_list,
       optional(seq(':', $.type_annotation)),
       choice(
-        prec(2, $.builder_function_body),  // 提高优先级，优先尝试解析为 Builder 函数体
-        prec(1, $.extend_function_body),   // @Extend 函数体
-        $.block_statement         // 普通函数体
+        prec(2, $.block_statement),         // 普通函数体
+        prec(1, $.builder_function_body),   // @Builder 函数体
+        $.extend_function_body              // @Extend 函数体
       )
     ),
 
     // @Builder 函数体 - 与 build_body 相同，支持 UI 组件
     builder_function_body: $ => prec(3, seq(
       '{',
-      repeat(choice($.block_statement, $._non_brace_content)),
+      repeat(choice($.statement, $.block_statement, $._non_brace_content)),
       '}'
     )),
 
@@ -1080,7 +1082,7 @@ module.exports = grammar({
     // 注意：$.comment 不需要显式匹配，因为它已在 extras 中定义（会被自动跳过）
     extend_function_body: $ => prec(2, seq(
       '{',
-      repeat(choice($.block_statement, $._non_brace_content)),
+      repeat(choice($.statement, $.block_statement, $._non_brace_content)),
       '}'
     )),
 

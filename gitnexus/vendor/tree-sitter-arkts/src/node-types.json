@@ -19,21 +19,6 @@
     }
   },
   {
-    "type": "arkts_ui_element",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "ui_element_with_modifiers",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "array_literal",
     "named": true,
     "fields": {},
@@ -187,21 +172,6 @@
     "fields": {}
   },
   {
-    "type": "break_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "identifier",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "build_body",
     "named": true,
     "fields": {},
@@ -268,29 +238,6 @@
         },
         {
           "type": "type_arguments",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "catch_clause",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "block_statement",
-          "named": true
-        },
-        {
-          "type": "identifier",
-          "named": true
-        },
-        {
-          "type": "type_annotation",
           "named": true
         }
       ]
@@ -405,40 +352,6 @@
     }
   },
   {
-    "type": "component_parameter",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "identifier",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "component_parameters",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
-        {
-          "type": "component_parameter",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "conditional_expression",
     "named": true,
     "fields": {},
@@ -486,36 +399,6 @@
         },
         {
           "type": "parameter_list",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "container_content_body",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
-        {
-          "type": "block_statement",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "continue_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "identifier",
           "named": true
         }
       ]
@@ -919,71 +802,6 @@
     }
   },
   {
-    "type": "finally_clause",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "block_statement",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "for_each_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "ui_builder_arrow_function",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "for_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "block_statement",
-          "named": true
-        },
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "identifier",
-          "named": true
-        },
-        {
-          "type": "statement",
-          "named": true
-        },
-        {
-          "type": "variable_declaration",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "function_declaration",
     "named": true,
     "fields": {},
@@ -1082,33 +900,6 @@
         },
         {
           "type": "type_arguments",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "if_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "block_statement",
-          "named": true
-        },
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "if_statement",
-          "named": true
-        },
-        {
-          "type": "statement",
           "named": true
         }
       ]
@@ -1214,25 +1005,6 @@
     }
   },
   {
-    "type": "lazy_for_each_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "ui_builder_arrow_function",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "member_expression",
     "named": true,
     "fields": {},
@@ -1289,29 +1061,6 @@
         },
         {
           "type": "type_parameters",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "modifier_chain_expression",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "identifier",
-          "named": true
-        },
-        {
-          "type": "modifier_chain_expression",
           "named": true
         }
       ]
@@ -1613,23 +1362,9 @@
     }
   },
   {
-    "type": "return_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "expression",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "source_file",
     "named": true,
+    "root": true,
     "fields": {},
     "children": {
       "multiple": true,
@@ -1721,57 +1456,6 @@
     }
   },
   {
-    "type": "statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "break_statement",
-          "named": true
-        },
-        {
-          "type": "continue_statement",
-          "named": true
-        },
-        {
-          "type": "expression_statement",
-          "named": true
-        },
-        {
-          "type": "for_statement",
-          "named": true
-        },
-        {
-          "type": "if_statement",
-          "named": true
-        },
-        {
-          "type": "return_statement",
-          "named": true
-        },
-        {
-          "type": "throw_statement",
-          "named": true
-        },
-        {
-          "type": "try_statement",
-          "named": true
-        },
-        {
-          "type": "variable_declaration",
-          "named": true
-        },
-        {
-          "type": "while_statement",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "subscript_expression",
     "named": true,
     "fields": {},
@@ -1815,44 +1499,6 @@
       "types": [
         {
           "type": "expression",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "throw_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "expression",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "try_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "block_statement",
-          "named": true
-        },
-        {
-          "type": "catch_clause",
-          "named": true
-        },
-        {
-          "type": "finally_clause",
           "named": true
         }
       ]
@@ -2000,152 +1646,6 @@
     }
   },
   {
-    "type": "ui_arrow_function_body",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
-        {
-          "type": "block_statement",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "ui_builder_arrow_function",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "identifier",
-          "named": true
-        },
-        {
-          "type": "parameter_list",
-          "named": true
-        },
-        {
-          "type": "type_annotation",
-          "named": true
-        },
-        {
-          "type": "ui_arrow_function_body",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "ui_component",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
-        {
-          "type": "component_parameters",
-          "named": true
-        },
-        {
-          "type": "container_content_body",
-          "named": true
-        },
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "identifier",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "ui_control_flow",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "for_each_statement",
-          "named": true
-        },
-        {
-          "type": "lazy_for_each_statement",
-          "named": true
-        },
-        {
-          "type": "ui_if_statement",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "ui_element_with_modifiers",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "modifier_chain_expression",
-          "named": true
-        },
-        {
-          "type": "ui_component",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "ui_if_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "arkts_ui_element",
-          "named": true
-        },
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "expression_statement",
-          "named": true
-        },
-        {
-          "type": "ui_control_flow",
-          "named": true
-        },
-        {
-          "type": "ui_if_statement",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "unary_expression",
     "named": true,
     "fields": {},
@@ -2223,29 +1723,6 @@
         },
         {
           "type": "type_annotation",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "while_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "block_statement",
-          "named": true
-        },
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "statement",
           "named": true
         }
       ]
@@ -2448,14 +1925,6 @@
     "named": false
   },
   {
-    "type": "Button",
-    "named": false
-  },
-  {
-    "type": "Column",
-    "named": false
-  },
-  {
     "type": "Component",
     "named": false
   },
@@ -2492,51 +1961,7 @@
     "named": false
   },
   {
-    "type": "Flex",
-    "named": false
-  },
-  {
-    "type": "ForEach",
-    "named": false
-  },
-  {
-    "type": "Grid",
-    "named": false
-  },
-  {
-    "type": "GridCol",
-    "named": false
-  },
-  {
-    "type": "GridItem",
-    "named": false
-  },
-  {
-    "type": "GridRow",
-    "named": false
-  },
-  {
-    "type": "Image",
-    "named": false
-  },
-  {
-    "type": "LazyForEach",
-    "named": false
-  },
-  {
     "type": "Link",
-    "named": false
-  },
-  {
-    "type": "List",
-    "named": false
-  },
-  {
-    "type": "ListItem",
-    "named": false
-  },
-  {
-    "type": "ListItemGroup",
     "named": false
   },
   {
@@ -2557,10 +1982,6 @@
   },
   {
     "type": "Monitor",
-    "named": false
-  },
-  {
-    "type": "NavDestination",
     "named": false
   },
   {
@@ -2604,18 +2025,6 @@
     "named": false
   },
   {
-    "type": "Row",
-    "named": false
-  },
-  {
-    "type": "ScrollList",
-    "named": false
-  },
-  {
-    "type": "Stack",
-    "named": false
-  },
-  {
     "type": "State",
     "named": false
   },
@@ -2629,18 +2038,6 @@
   },
   {
     "type": "Styles",
-    "named": false
-  },
-  {
-    "type": "Text",
-    "named": false
-  },
-  {
-    "type": "TextArea",
-    "named": false
-  },
-  {
-    "type": "TextInput",
     "named": false
   },
   {
@@ -2661,10 +2058,6 @@
   },
   {
     "type": "[",
-    "named": false
-  },
-  {
-    "type": "\\",
     "named": false
   },
   {
@@ -2708,15 +2101,7 @@
     "named": false
   },
   {
-    "type": "break",
-    "named": false
-  },
-  {
     "type": "build",
-    "named": false
-  },
-  {
-    "type": "catch",
     "named": false
   },
   {
@@ -2725,7 +2110,8 @@
   },
   {
     "type": "comment",
-    "named": true
+    "named": true,
+    "extra": true
   },
   {
     "type": "const",
@@ -2736,19 +2122,11 @@
     "named": false
   },
   {
-    "type": "continue",
-    "named": false
-  },
-  {
     "type": "default",
     "named": false
   },
   {
     "type": "delete",
-    "named": false
-  },
-  {
-    "type": "else",
     "named": false
   },
   {
@@ -2768,14 +2146,6 @@
     "named": false
   },
   {
-    "type": "finally",
-    "named": false
-  },
-  {
-    "type": "for",
-    "named": false
-  },
-  {
     "type": "from",
     "named": false
   },
@@ -2786,10 +2156,6 @@
   {
     "type": "identifier",
     "named": true
-  },
-  {
-    "type": "if",
-    "named": false
   },
   {
     "type": "implements",
@@ -2832,10 +2198,6 @@
     "named": true
   },
   {
-    "type": "of",
-    "named": false
-  },
-  {
     "type": "private",
     "named": false
   },
@@ -2849,10 +2211,6 @@
   },
   {
     "type": "readonly",
-    "named": false
-  },
-  {
-    "type": "return",
     "named": false
   },
   {
@@ -2876,15 +2234,7 @@
     "named": true
   },
   {
-    "type": "throw",
-    "named": false
-  },
-  {
     "type": "true",
-    "named": false
-  },
-  {
-    "type": "try",
     "named": false
   },
   {
@@ -2905,10 +2255,6 @@
   },
   {
     "type": "void",
-    "named": false
-  },
-  {
-    "type": "while",
     "named": false
   },
   {
