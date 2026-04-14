@@ -244,6 +244,58 @@ Each edit is tagged with confidence:
     },
   },
   {
+    name: 'dependencies',
+    description: `Find module-level dependency relationships (imports, extends, implements).
+
+WHEN TO USE: Understanding which modules/packages/components depend on a target, or what a target depends on. Answers questions like "who imports @meituan/mrouter" or "what does this module depend on". Unlike impact() which traces symbol-level call chains, this tool operates at file/module granularity for a clearer dependency picture.
+AFTER THIS: Use impact() for symbol-level blast radius, or context() for a specific symbol's details.
+
+Returns: dependencies grouped by type (imports, extends, implements), with file paths and confidence scores.
+
+Search modes:
+- By module path (e.g., "@meituan/mrouter"): finds all files importing that module
+- By symbol name (e.g., "MRouter"): finds all files/classes using that symbol
+- By file path substring (e.g., "router/Index.ets"): finds dependencies of that file`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        target: {
+          type: 'string',
+          description:
+            'Module path (e.g., "@meituan/mrouter"), symbol name (e.g., "MRouter"), or file path substring (e.g., "router/Index.ets")',
+        },
+        direction: {
+          type: 'string',
+          description:
+            '"upstream" = who depends on this (dependants), "downstream" = what this depends on (dependencies)',
+          enum: ['upstream', 'downstream'],
+          default: 'upstream',
+        },
+        relationTypes: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Filter by relation types: IMPORTS, EXTENDS, IMPLEMENTS (default: all three)',
+        },
+        minConfidence: {
+          type: 'number',
+          description: 'Minimum confidence threshold 0-1 (default: 0.5)',
+          default: 0.5,
+        },
+        includeTests: {
+          type: 'boolean',
+          description: 'Include test files in results (default: false)',
+          default: false,
+        },
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+      },
+      required: ['target'],
+    },
+  },
+  {
     name: 'impact',
     description: `Analyze the blast radius of changing a code symbol.
 Returns affected symbols grouped by depth, plus risk assessment, affected execution flows, and affected modules.

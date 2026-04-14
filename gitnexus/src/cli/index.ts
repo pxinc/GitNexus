@@ -140,6 +140,14 @@ program
   .option('-r, --repo <name>', 'Target repository')
   .action(createLazyAction(() => import('./tool.js'), 'cypherCommand'));
 
+program
+  .command('dependencies <target>')
+  .description('Find module-level dependency relationships (imports, extends, implements)')
+  .option('-d, --direction <dir>', 'upstream (dependants) or downstream (dependencies)', 'upstream')
+  .option('-r, --repo <name>', 'Target repository')
+  .option('--include-tests', 'Include test files in results')
+  .action(createLazyAction(() => import('./tool.js'), 'dependenciesCommand'));
+
 // ─── Eval Server (persistent daemon for SWE-bench) ─────────────────
 
 program

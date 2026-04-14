@@ -38,7 +38,7 @@ export const walkRepositoryPaths = async (
   const filtered = await glob('**/*', {
     cwd: repoPath,
     nodir: true,
-    dot: false,
+    dot: true,
     ignore: ignoreFilter,
   });
   const entries: ScannedFile[] = [];

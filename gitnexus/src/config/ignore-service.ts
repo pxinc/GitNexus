@@ -61,6 +61,11 @@ const DEFAULT_IGNORE_LIST = new Set([
   '.turbo',
   '.svelte-kit',
 
+  // HarmonyOS Build & Tools
+  '.hvigor', // Hvigor build system cache
+  '.arkts', // ArkTS compiler cache
+  '.meat', // MEAT package manager cache
+
   // Test & Coverage
   'coverage',
   '.nyc_output',

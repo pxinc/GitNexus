@@ -164,3 +164,26 @@ export async function cypherCommand(
   });
   output(result);
 }
+
+export async function dependenciesCommand(
+  target: string,
+  options?: {
+    direction?: string;
+    repo?: string;
+    includeTests?: boolean;
+  },
+): Promise<void> {
+  if (!target?.trim()) {
+    console.error('Usage: gitnexus dependencies <target> [--direction upstream|downstream]');
+    process.exit(1);
+  }
+
+  const backend = await getBackend();
+  const result = await backend.callTool('dependencies', {
+    target,
+    direction: options?.direction || 'upstream',
+    includeTests: options?.includeTests ?? false,
+    repo: options?.repo,
+  });
+  output(result);
+}

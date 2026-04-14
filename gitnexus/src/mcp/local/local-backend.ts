@@ -475,6 +475,8 @@ export class LocalBackend {
         return this.context(repo, params);
       case 'impact':
         return this.impact(repo, params);
+      case 'dependencies':
+        return this.dependencies(repo, params);
       case 'detect_changes':
         return this.detectChanges(repo, params);
       case 'rename':
@@ -917,6 +919,209 @@ export class LocalBackend {
       return result;
     } catch (err: any) {
       return { error: err.message || 'Query failed' };
+    }
+  }
+
+  // ─── Dependencies Tool ────────────────────────────────────────────
+
+  /**
+   * Find module-level dependency relationships (imports, extends, implements).
+   *
+   * Unlike impact() which does BFS traversal at symbol level, this tool operates
+   * at file/module granularity for clearer dependency pictures. It supports three
+   * search modes: by module path, by symbol name, or by file path substring.
+   */
+  private async dependencies(
+    repo: RepoHandle,
+    params: {
+      target: string;
+      direction?: string;
+      relationTypes?: string[];
+      minConfidence?: number;
+      includeTests?: boolean;
+      repo?: string;
+    },
+  ): Promise<any> {
+    await this.ensureInitialized(repo.id);
+
+    if (!isLbugReady(repo.id)) {
+      return { error: 'LadybugDB not ready. Index may be corrupted.' };
+    }
+
+    const target = params.target?.trim();
+    if (!target) {
+      return { error: 'target parameter is required' };
+    }
+
+    const direction = params.direction || 'upstream';
+    const relTypes = params.relationTypes || ['IMPORTS', 'EXTENDS', 'IMPLEMENTS'];
+    const minConfidence = params.minConfidence ?? 0.5;
+    const includeTests = params.includeTests ?? false;
+
+    try {
+      // Build relation type filter for Cypher (Kuzu doesn't support IN with literal lists)
+      const relTypeFilter = relTypes.map((t) => `r.type = '${t}'`).join(' OR ');
+
+      // Detect search mode based on target pattern
+      const isModulePath = target.startsWith('@') || target.startsWith('/');
+      const results: any[] = [];
+
+      if (direction === 'upstream') {
+        // Find who depends on the target (dependants)
+        if (isModulePath) {
+          // Module path search: find files importing this module
+          const rows = await executeParameterized(
+            repo.id,
+            `
+            MATCH (a:File)-[r:CodeRelation]->(b:File)
+            WHERE (${relTypeFilter})
+              AND b.filePath CONTAINS $target
+              AND r.confidence >= $minConf
+            RETURN a.filePath AS source, b.filePath AS target, r.type AS relType, r.confidence AS confidence
+            ORDER BY a.filePath
+            `,
+            { target, minConf: minConfidence },
+          );
+          for (const row of rows) {
+            const source = row.source || row[0] || '';
+            if (!includeTests && isTestFilePath(source)) continue;
+            results.push({
+              source,
+              target: row.target || row[1] || '',
+              relation: row.relType || row[2] || '',
+              confidence: row.confidence ?? row[3] ?? 1,
+            });
+          }
+        } else {
+          // Symbol name search: find who imports/extends/implements this symbol
+          // First try matching File nodes by filePath, then code symbols by name
+          const fileRows = await executeParameterized(
+            repo.id,
+            `
+            MATCH (a)-[r:CodeRelation]->(b)
+            WHERE (${relTypeFilter})
+              AND (b.filePath CONTAINS $target OR b.name = $target)
+              AND r.confidence >= $minConf
+            RETURN a.filePath AS source, a.name AS sourceName, labels(a)[0] AS sourceType,
+                   b.filePath AS targetPath, b.name AS targetName, labels(b)[0] AS targetType,
+                   r.type AS relType, r.confidence AS confidence
+            ORDER BY a.filePath
+            LIMIT 200
+            `,
+            { target, minConf: minConfidence },
+          );
+          for (const row of fileRows) {
+            const source = row.source || row[0] || '';
+            if (!includeTests && isTestFilePath(source)) continue;
+            results.push({
+              source,
+              sourceName: row.sourceName || row[1] || '',
+              sourceType: row.sourceType || row[2] || '',
+              targetPath: row.targetPath || row[3] || '',
+              targetName: row.targetName || row[4] || '',
+              targetType: row.targetType || row[5] || '',
+              relation: row.relType || row[6] || '',
+              confidence: row.confidence ?? row[7] ?? 1,
+            });
+          }
+        }
+      } else {
+        // Downstream: find what the target depends on
+        if (isModulePath) {
+          const rows = await executeParameterized(
+            repo.id,
+            `
+            MATCH (a:File)-[r:CodeRelation]->(b:File)
+            WHERE (${relTypeFilter})
+              AND a.filePath CONTAINS $target
+              AND r.confidence >= $minConf
+            RETURN a.filePath AS source, b.filePath AS target, r.type AS relType, r.confidence AS confidence
+            ORDER BY b.filePath
+            `,
+            { target, minConf: minConfidence },
+          );
+          for (const row of rows) {
+            const source = row.source || row[0] || '';
+            if (!includeTests && isTestFilePath(source)) continue;
+            results.push({
+              source,
+              target: row.target || row[1] || '',
+              relation: row.relType || row[2] || '',
+              confidence: row.confidence ?? row[3] ?? 1,
+            });
+          }
+        } else {
+          const fileRows = await executeParameterized(
+            repo.id,
+            `
+            MATCH (a)-[r:CodeRelation]->(b)
+            WHERE (${relTypeFilter})
+              AND (a.filePath CONTAINS $target OR a.name = $target)
+              AND r.confidence >= $minConf
+            RETURN a.filePath AS sourcePath, a.name AS sourceName, labels(a)[0] AS sourceType,
+                   b.filePath AS targetPath, b.name AS targetName, labels(b)[0] AS targetType,
+                   r.type AS relType, r.confidence AS confidence
+            ORDER BY b.filePath
+            LIMIT 200
+            `,
+            { target, minConf: minConfidence },
+          );
+          for (const row of fileRows) {
+            const sourcePath = row.sourcePath || row[0] || '';
+            if (!includeTests && isTestFilePath(sourcePath)) continue;
+            results.push({
+              sourcePath,
+              sourceName: row.sourceName || row[1] || '',
+              sourceType: row.sourceType || row[2] || '',
+              targetPath: row.targetPath || row[3] || '',
+              targetName: row.targetName || row[4] || '',
+              targetType: row.targetType || row[5] || '',
+              relation: row.relType || row[6] || '',
+              confidence: row.confidence ?? row[7] ?? 1,
+            });
+          }
+        }
+      }
+
+      // Group by relation type for summary
+      const byType: Record<string, number> = {};
+      for (const r of results) {
+        const rel = r.relation;
+        byType[rel] = (byType[rel] || 0) + 1;
+      }
+
+      // Extract unique modules/packages from file paths
+      const modules = new Set<string>();
+      for (const r of results) {
+        const path = direction === 'upstream' ? r.source || r.sourcePath : r.target || r.targetPath;
+        if (!path) continue;
+        // Extract module name from oh_modules path
+        const ohMatch = path.match(/oh_modules\/(@?[^/]+(?:\/[^/]+)?)/);
+        if (ohMatch) {
+          modules.add(ohMatch[1]);
+        } else {
+          // Top-level directory as module
+          const parts = path.split('/');
+          if (parts.length > 0) modules.add(parts[0]);
+        }
+      }
+
+      return {
+        target: params.target,
+        direction,
+        relationTypes: relTypes,
+        total: results.length,
+        summary: byType,
+        modules: [...modules].sort(),
+        dependencies: results,
+      };
+    } catch (err: any) {
+      return {
+        error: err.message || 'Dependencies query failed',
+        target: params.target,
+        direction,
+        suggestion: 'Try a different target or check if the repo is indexed.',
+      };
     }
   }
 
