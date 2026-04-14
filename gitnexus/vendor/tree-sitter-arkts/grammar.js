@@ -297,7 +297,7 @@ module.exports = grammar({
       optional(choice('private', 'public', 'protected')),
       optional('static'),
       optional('readonly'),  // 支持readonly修饰符
-      $.identifier,
+      choice($.identifier, $.private_field_identifier),  // 支持 #x 私有字段
       optional('?'),  // 支持可选属性标记
       optional(seq(':', $.type_annotation)),
       optional(seq('=', $.expression)),
@@ -343,7 +343,7 @@ module.exports = grammar({
     ui_component: $ => prec.right(3, choice(
       // 基础组件
       seq('Text', '(', $.expression, ')'),
-      seq('Button', '(', optional(choice($.expression, $.component_parameters)), ')', optional($.container_content_body)),  // Button 也可以有子组件
+      seq('Button', '(', optional(choice($.expression, $.component_parameters)), ')', optional($.container_content_body)),  // Button 支持 0-2 个参数，也可以有子组件
       seq('Image', '(', $.expression, ')'),
       seq(choice('TextInput', 'TextArea'), '(', optional($.component_parameters), ')'),
       // 布局容器 - 使用专门的容器内容体
@@ -363,7 +363,7 @@ module.exports = grammar({
     ),
 
     // ArkTS UI元素 - 只使用带修饰符的元素（修饰符链是可选的）
-    arkts_ui_element: $ => $.ui_element_with_modifiers,
+    arkts_ui_element: $ => seq($.ui_element_with_modifiers, optional(';')),
 
     // UI自定义组件调用语句 - 自定义组件调用 + 必需的分号
     // 根据ArkUI官方规范：自定义组件调用属于表达式语句，需要分号结尾
@@ -450,6 +450,9 @@ module.exports = grammar({
       '\\',
       choice(/["'\\bfnrtv]/, /\d{1,3}/, /x[0-9a-fA-F]{2}/, /u[0-9a-fA-F]{4}/)
     ),
+
+    private_field_identifier: $ => /#[a-zA-Z_$][a-zA-Z0-9_$]*/,  // JS private fields (#x)
+
     // 添加基本表达式支持
     expression: $ => choice(
       $.identifier,
@@ -742,6 +745,7 @@ module.exports = grammar({
 
     parameter: $ => seq(
       optional('...'),  // 支持剩余参数
+      optional(choice('public', 'private', 'protected', 'readonly')),  // 构造函数参数修饰符
       $.identifier,
       optional('?'),  // 支持可选参数
       optional(seq(':', $.type_annotation)),
@@ -925,19 +929,19 @@ module.exports = grammar({
     spread_element: $ => seq('...', $.expression),
 
     // 成员表达式 - 降低优先级，避免与修饰符链冲突
-    // 支持可选链 ?.
+    // 支持可选链 ?. 和 #私有字段
     member_expression: $ => choice(
       // 普通成员访问
       prec.left(1, seq(
         $.expression,
         '.',
-        $.identifier
+        choice($.identifier, $.private_field_identifier)
       )),
       // 可选链成员访问 - 使用明确的 '?.' token 避免与条件表达式冲突
       prec.left(1, seq(
         $.expression,
         '?.',
-        $.identifier
+        choice($.identifier, $.private_field_identifier)
       ))
     ),
 
