@@ -29,7 +29,7 @@ import { BUILT_INS } from './typescript.js';
  * These are standard HarmonyOS declarative UI components that should
  * not produce CALLS edges in the knowledge graph.
  */
-const ARKTS_UI_COMPONENTS: ReadonlySet<string> = new Set([
+export const ARKTS_UI_COMPONENTS: ReadonlySet<string> = new Set([
   // Basic components
   'Text',
   'Button',

@@ -88,6 +88,7 @@ import {
   buildCollisionGroups,
 } from '../utils/method-props.js';
 import type { LanguageProvider } from '../language-provider.js';
+import { extractArktsUiChainMatches } from '../utils/arkts-ui-chain-extractor.js';
 
 // ============================================================================
 // Types for serializable results
@@ -1395,6 +1396,30 @@ const processFileGroup = (
         `Query execution failed for ${file.path}: ${err instanceof Error ? err.message : String(err)}`,
       );
       continue;
+    }
+
+    // ArkTS UI chain post-processing: recover calls from ERROR nodes
+    // that tree-sitter-arkts generates for fluent UI component chains
+    // (e.g. Text('hello').fontSize(20).onClick(() => {})).
+    if (language === SupportedLanguages.ArkTS) {
+      const arktsExtras = extractArktsUiChainMatches(tree, parseContent);
+      if (arktsExtras.length > 0) {
+        // Collect already-seen call positions to avoid duplicates
+        const seenPositions = new Set<number>();
+        for (const m of matches) {
+          for (const c of m.captures) {
+            if (c.name === 'call') seenPositions.add(c.node.startIndex);
+          }
+        }
+        // Add only non-duplicate synthetic matches
+        for (const m of arktsExtras) {
+          const callCapture = m.captures.find((c) => c.name === 'call');
+          if (callCapture && !seenPositions.has(callCapture.node.startIndex)) {
+            matches.push(m as any);
+            seenPositions.add(callCapture.node.startIndex);
+          }
+        }
+      }
     }
 
     // Pre-pass: extract heritage from query matches to build parentMap for buildTypeEnv.
