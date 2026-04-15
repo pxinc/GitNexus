@@ -990,6 +990,25 @@
     }
   },
   {
+    "type": "for_each_statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expression",
+          "named": true
+        },
+        {
+          "type": "ui_builder_arrow_function",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "for_statement",
     "named": true,
     "fields": {},
@@ -1245,6 +1264,25 @@
         },
         {
           "type": "type_parameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "lazy_for_each_statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expression",
+          "named": true
+        },
+        {
+          "type": "ui_builder_arrow_function",
           "named": true
         }
       ]
@@ -1648,7 +1686,6 @@
   {
     "type": "source_file",
     "named": true,
-    "root": true,
     "fields": {},
     "children": {
       "multiple": true,
@@ -2019,7 +2056,7 @@
     }
   },
   {
-    "type": "ui_component",
+    "type": "ui_arrow_function_body",
     "named": true,
     "fields": {},
     "children": {
@@ -2027,9 +2064,63 @@
       "required": false,
       "types": [
         {
-          "type": "component_parameters",
+          "type": "arkts_ui_element",
           "named": true
         },
+        {
+          "type": "block_statement",
+          "named": true
+        },
+        {
+          "type": "modifier_chain_expression",
+          "named": true
+        },
+        {
+          "type": "statement",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ui_builder_arrow_function",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "parameter_list",
+          "named": true
+        },
+        {
+          "type": "type_annotation",
+          "named": true
+        },
+        {
+          "type": "ui_arrow_function_body",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ui_component",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
         {
           "type": "container_content_body",
           "named": true
@@ -2040,6 +2131,29 @@
         },
         {
           "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ui_control_flow",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "for_each_statement",
+          "named": true
+        },
+        {
+          "type": "lazy_for_each_statement",
+          "named": true
+        },
+        {
+          "type": "ui_if_statement",
           "named": true
         }
       ]
@@ -2059,6 +2173,37 @@
         },
         {
           "type": "ui_component",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ui_if_statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arkts_ui_element",
+          "named": true
+        },
+        {
+          "type": "expression",
+          "named": true
+        },
+        {
+          "type": "expression_statement",
+          "named": true
+        },
+        {
+          "type": "ui_control_flow",
+          "named": true
+        },
+        {
+          "type": "ui_if_statement",
           "named": true
         }
       ]
@@ -2367,14 +2512,6 @@
     "named": false
   },
   {
-    "type": "Button",
-    "named": false
-  },
-  {
-    "type": "Column",
-    "named": false
-  },
-  {
     "type": "Component",
     "named": false
   },
@@ -2411,43 +2548,15 @@
     "named": false
   },
   {
-    "type": "Flex",
+    "type": "ForEach",
     "named": false
   },
   {
-    "type": "Grid",
-    "named": false
-  },
-  {
-    "type": "GridCol",
-    "named": false
-  },
-  {
-    "type": "GridItem",
-    "named": false
-  },
-  {
-    "type": "GridRow",
-    "named": false
-  },
-  {
-    "type": "Image",
+    "type": "LazyForEach",
     "named": false
   },
   {
     "type": "Link",
-    "named": false
-  },
-  {
-    "type": "List",
-    "named": false
-  },
-  {
-    "type": "ListItem",
-    "named": false
-  },
-  {
-    "type": "ListItemGroup",
     "named": false
   },
   {
@@ -2468,10 +2577,6 @@
   },
   {
     "type": "Monitor",
-    "named": false
-  },
-  {
-    "type": "NavDestination",
     "named": false
   },
   {
@@ -2515,18 +2620,6 @@
     "named": false
   },
   {
-    "type": "Row",
-    "named": false
-  },
-  {
-    "type": "ScrollList",
-    "named": false
-  },
-  {
-    "type": "Stack",
-    "named": false
-  },
-  {
     "type": "State",
     "named": false
   },
@@ -2540,18 +2633,6 @@
   },
   {
     "type": "Styles",
-    "named": false
-  },
-  {
-    "type": "Text",
-    "named": false
-  },
-  {
-    "type": "TextArea",
-    "named": false
-  },
-  {
-    "type": "TextInput",
     "named": false
   },
   {
@@ -2572,6 +2653,10 @@
   },
   {
     "type": "[",
+    "named": false
+  },
+  {
+    "type": "\\",
     "named": false
   },
   {
@@ -2632,8 +2717,7 @@
   },
   {
     "type": "comment",
-    "named": true,
-    "extra": true
+    "named": true
   },
   {
     "type": "const",

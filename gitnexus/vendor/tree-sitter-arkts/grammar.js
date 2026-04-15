@@ -345,14 +345,14 @@ module.exports = grammar({
     // UI组件基础部分
     ui_component: $ => prec.right(3, choice(
       // 基础组件
-      seq('Text', '(', $.expression, ')'),
-      seq('Button', '(', optional($.expression), ')', optional($.container_content_body)),  // Button 也可以有子组件
-      seq('Image', '(', $.expression, ')'),
-      seq(choice('TextInput', 'TextArea'), '(', optional($.expression), ')'),
+      seq(alias('Text', $.identifier), '(', $.expression, ')'),
+      seq(alias('Button', $.identifier), '(', optional($.expression), ')', optional($.container_content_body)),
+      seq(alias('Image', $.identifier), '(', $.expression, ')'),
+      seq(alias(choice('TextInput', 'TextArea'), $.identifier), '(', optional($.expression), ')'),
       // 布局容器 - 使用专门的容器内容体
-      seq(choice('Column', 'Row', 'Stack', 'Flex', 'Grid', 'GridRow', 'GridCol', 'List', 'ScrollList', 'NavDestination'), '(', optional($.expression), ')', optional($.container_content_body)),
+      seq(alias(choice('Column', 'Row', 'Stack', 'Flex', 'Grid', 'GridRow', 'GridCol', 'List', 'ScrollList', 'NavDestination'), $.identifier), '(', optional($.expression), ')', optional($.container_content_body)),
       // 特殊容器项
-      seq(choice('ListItem', 'GridItem', 'ListItemGroup'), '(', optional($.expression), ')', optional($.container_content_body)),
+      seq(alias(choice('ListItem', 'GridItem', 'ListItemGroup'), $.identifier), '(', optional($.expression), ')', optional($.container_content_body)),
       // 自定义组件 - 支持容器内容体
       seq($.identifier, '(', optional(commaSep($.expression)), ')', optional($.container_content_body))
     )),
