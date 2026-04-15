@@ -1190,6 +1190,20 @@ export const ARKTS_QUERIES = `
 (component_declaration
   (identifier) @name) @definition.class
 
+(interface_declaration
+  (identifier) @name) @definition.interface
+
+(enum_declaration
+  (identifier) @name) @definition.enum
+
+(enum_member
+  (identifier) @name) @definition.enum_member
+
+(type_declaration
+  (identifier) @name) @definition.type
+
+(constructor_declaration) @definition.method
+
 (function_declaration
   (identifier) @name) @definition.function
 
@@ -1198,6 +1212,10 @@ export const ARKTS_QUERIES = `
 
 (property_declaration
   (identifier) @name) @definition.property
+
+; ArkTS decorated function declarations (@Builder, @Extend, etc.)
+(decorated_function_declaration
+  (identifier) @name) @definition.function
 
 (variable_declaration
   (variable_declarator
@@ -1213,6 +1231,10 @@ export const ARKTS_QUERIES = `
 (import_declaration
   (string_literal) @import.source) @import
 
+(import_declaration
+  (import_specifier
+    (identifier) @name)) @import
+
 ; ── Calls ───────────────────────────────────────────────────────────────────
 (call_expression
   (expression (identifier) @call.name)) @call
@@ -1226,9 +1248,19 @@ export const ARKTS_QUERIES = `
   (expression (identifier) @call.name)) @call
 
 ; ── Heritage ────────────────────────────────────────────────────────────────
+; Note: tree-sitter-arkts uses type_annotation for class extends, implements_clause for implements
 (class_declaration
   (identifier) @heritage.class
   (type_annotation (primary_type (identifier) @heritage.extends))) @heritage
+
+(class_declaration
+  (implements_clause (_) @heritage.implements)) @heritage
+
+; ── Exports ─────────────────────────────────────────────────────────────────
+(export_declaration (_) @export)
+
+; ArkTS decorated exports (@Component etc.)
+(decorated_export_declaration) @export
 
 ; ── Assignments ─────────────────────────────────────────────────────────────
 (assignment_expression
