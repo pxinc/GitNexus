@@ -1178,8 +1178,17 @@
           ]
         },
         {
-          "type": "SYMBOL",
-          "name": "identifier"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "identifier"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "private_field_identifier"
+            }
+          ]
         },
         {
           "type": "CHOICE",
@@ -1305,19 +1314,7 @@
             "members": [
               {
                 "type": "SYMBOL",
-                "name": "statement"
-              },
-              {
-                "type": "SYMBOL",
                 "name": "block_statement"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "arkts_ui_element"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "modifier_chain_expression"
               },
               {
                 "type": "SYMBOL",
@@ -1816,19 +1813,7 @@
             "members": [
               {
                 "type": "SYMBOL",
-                "name": "statement"
-              },
-              {
-                "type": "SYMBOL",
                 "name": "block_statement"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "arkts_ui_element"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "modifier_chain_expression"
               },
               {
                 "type": "SYMBOL",
@@ -1844,8 +1829,25 @@
       ]
     },
     "arkts_ui_element": {
-      "type": "SYMBOL",
-      "name": "ui_element_with_modifiers"
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "ui_element_with_modifiers"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": ";"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        }
+      ]
     },
     "ui_custom_component_statement": {
       "type": "PREC",
@@ -2202,7 +2204,7 @@
       "type": "TOKEN",
       "content": {
         "type": "PREC",
-        "value": -1,
+        "value": 1,
         "content": {
           "type": "PATTERN",
           "value": "[^{}]+"
@@ -2348,6 +2350,10 @@
           ]
         }
       ]
+    },
+    "private_field_identifier": {
+      "type": "PATTERN",
+      "value": "#[a-zA-Z_$][a-zA-Z0-9_$]*"
     },
     "expression": {
       "type": "CHOICE",
@@ -3898,7 +3904,7 @@
               "value": 3,
               "content": {
                 "type": "SYMBOL",
-                "name": "block_statement"
+                "name": "builder_function_body"
               }
             },
             {
@@ -3906,7 +3912,7 @@
               "value": 2,
               "content": {
                 "type": "SYMBOL",
-                "name": "builder_function_body"
+                "name": "extend_function_body"
               }
             },
             {
@@ -3914,7 +3920,7 @@
               "value": 1,
               "content": {
                 "type": "SYMBOL",
-                "name": "extend_function_body"
+                "name": "block_statement"
               }
             },
             {
@@ -3999,6 +4005,35 @@
           ]
         },
         {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "public"
+                },
+                {
+                  "type": "STRING",
+                  "value": "private"
+                },
+                {
+                  "type": "STRING",
+                  "value": "protected"
+                },
+                {
+                  "type": "STRING",
+                  "value": "readonly"
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
           "type": "SYMBOL",
           "name": "identifier"
         },
@@ -4076,11 +4111,7 @@
               },
               {
                 "type": "SYMBOL",
-                "name": "statement"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "comment"
+                "name": "_non_brace_content"
               }
             ]
           }
@@ -4780,19 +4811,7 @@
             "members": [
               {
                 "type": "SYMBOL",
-                "name": "statement"
-              },
-              {
-                "type": "SYMBOL",
                 "name": "block_statement"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "arkts_ui_element"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "modifier_chain_expression"
               },
               {
                 "type": "SYMBOL",
@@ -5023,8 +5042,17 @@
                 "value": "."
               },
               {
-                "type": "SYMBOL",
-                "name": "identifier"
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "identifier"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "private_field_identifier"
+                  }
+                ]
               }
             ]
           }
@@ -5044,8 +5072,17 @@
                 "value": "?."
               },
               {
-                "type": "SYMBOL",
-                "name": "identifier"
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "identifier"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "private_field_identifier"
+                  }
+                ]
               }
             ]
           }
@@ -5656,7 +5693,7 @@
               "value": 2,
               "content": {
                 "type": "SYMBOL",
-                "name": "block_statement"
+                "name": "builder_function_body"
               }
             },
             {
@@ -5664,12 +5701,12 @@
               "value": 1,
               "content": {
                 "type": "SYMBOL",
-                "name": "builder_function_body"
+                "name": "extend_function_body"
               }
             },
             {
               "type": "SYMBOL",
-              "name": "extend_function_body"
+              "name": "block_statement"
             }
           ]
         }
@@ -5692,19 +5729,7 @@
               "members": [
                 {
                   "type": "SYMBOL",
-                  "name": "statement"
-                },
-                {
-                  "type": "SYMBOL",
                   "name": "block_statement"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "arkts_ui_element"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "modifier_chain_expression"
                 },
                 {
                   "type": "SYMBOL",
@@ -5803,19 +5828,7 @@
               "members": [
                 {
                   "type": "SYMBOL",
-                  "name": "statement"
-                },
-                {
-                  "type": "SYMBOL",
                   "name": "block_statement"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "arkts_ui_element"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "modifier_chain_expression"
                 },
                 {
                   "type": "SYMBOL",
@@ -6615,11 +6628,6 @@
       "ui_arrow_function_body"
     ],
     [
-      "block_statement",
-      "builder_function_body",
-      "extend_function_body"
-    ],
-    [
       "ui_if_statement",
       "block_statement",
       "object_literal"
@@ -6756,10 +6764,6 @@
     [
       "variable_declaration",
       "enum_declaration"
-    ],
-    [
-      "variable_declaration",
-      "for_statement"
     ],
     [
       "variable_declaration"
