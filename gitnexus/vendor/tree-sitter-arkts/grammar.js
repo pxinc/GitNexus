@@ -342,14 +342,14 @@ module.exports = grammar({
     // UI组件基础部分
     ui_component: $ => prec.right(3, choice(
       // 基础组件
-      seq('Text', '(', $.expression, ')'),
-      seq('Button', '(', optional(choice($.expression, $.component_parameters)), ')', optional($.container_content_body)),  // Button 支持 0-2 个参数，也可以有子组件
-      seq('Image', '(', $.expression, ')'),
-      seq(choice('TextInput', 'TextArea'), '(', optional($.component_parameters), ')'),
+      seq(alias('Text', $.identifier), '(', $.expression, ')'),
+      seq(alias('Button', $.identifier), '(', optional(choice($.expression, $.component_parameters)), ')', optional($.container_content_body)),
+      seq(alias('Image', $.identifier), '(', $.expression, ')'),
+      seq(alias(choice('TextInput', 'TextArea'), $.identifier), '(', optional($.component_parameters), ')'),
       // 布局容器 - 使用专门的容器内容体
-      seq(choice('Column', 'Row', 'Stack', 'Flex', 'Grid', 'GridRow', 'GridCol', 'List', 'ScrollList', 'NavDestination'), '(', optional($.component_parameters), ')', optional($.container_content_body)),
+      seq(alias(choice('Column', 'Row', 'Stack', 'Flex', 'Grid', 'GridRow', 'GridCol', 'List', 'ScrollList', 'NavDestination'), $.identifier), '(', optional($.component_parameters), ')', optional($.container_content_body)),
       // 特殊容器项
-      seq(choice('ListItem', 'GridItem', 'ListItemGroup'), '(', optional($.component_parameters), ')', optional($.container_content_body)),
+      seq(alias(choice('ListItem', 'GridItem', 'ListItemGroup'), $.identifier), '(', optional($.component_parameters), ')', optional($.container_content_body)),
       // 自定义组件 - 支持容器内容体
       seq($.identifier, '(', optional(choice($.component_parameters, commaSep($.expression))), ')', optional($.container_content_body))
     )),

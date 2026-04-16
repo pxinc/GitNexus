@@ -1181,6 +1181,13 @@ export const DART_QUERIES = `
 //   import_declaration/string_literal (not import_statement/string),
 //   variable_declaration (not lexical_declaration), etc.
 export const ARKTS_QUERIES = `
+; ── ArkTS queries (tree-sitter-arkts native node types) ─────────────────────
+; tree-sitter-arkts uses different node types than tree-sitter-typescript:
+;   identifier (not type_identifier/property_identifier),
+;   method_declaration (not method_definition),
+;   import_declaration/string_literal (not import_statement/string),
+;   variable_declaration (not lexical_declaration), etc.
+
 ; ── Definitions ─────────────────────────────────────────────────────────────
 
 ; Class
@@ -1204,6 +1211,20 @@ export const ARKTS_QUERIES = `
   (decorator)
   (identifier) @name) @definition.class
 
+; Enum
+(enum_declaration
+  (identifier) @name) @definition.enum
+
+(enum_member
+  (identifier) @name) @definition.enum_member
+
+; Type alias
+(type_declaration
+  (identifier) @name) @definition.type
+
+; Constructor
+(constructor_declaration) @definition.method
+
 ; Method
 (method_declaration
   (identifier) @name) @definition.method
@@ -1218,21 +1239,29 @@ export const ARKTS_QUERIES = `
   (identifier) @name
   (type_annotation)) @definition.property
 
-; ── Functions (arrow + function expression in variable declarator) ───────────
-
-(variable_declaration
-  (variable_declarator
-    (identifier) @name
-    (expression
-      (arrow_function)))) @definition.function
-
-(variable_declaration
-  (variable_declarator
-    (identifier) @name
-    (expression
-      (function_expression)))) @definition.function
+; ── Functions ───────────────────────────────────────────────────────────────
 
 ; Top-level function declaration
+(function_declaration
+  (identifier) @name) @definition.function
+
+; ArkTS decorated function declarations (@Builder, @Extend, etc.)
+(decorated_function_declaration
+  (identifier) @name) @definition.function
+
+; Arrow function in variable declarator
+(variable_declaration
+  (variable_declarator
+    (identifier) @name
+    (expression (arrow_function)))) @definition.function
+
+; Function expression in variable declarator
+(variable_declaration
+  (variable_declarator
+    (identifier) @name
+    (expression (function_expression)))) @definition.function
+
+; Top-level function_expression under expression_statement
 ; tree-sitter-arkts produces function_expression under expression_statement
 (expression_statement
   (expression
@@ -1242,48 +1271,75 @@ export const ARKTS_QUERIES = `
       (type_annotation)?
       (block_statement)))) @definition.function
 
-; ── Imports ──────────────────────────────────────────────────────────────────
+; ── Imports ─────────────────────────────────────────────────────────────────
 
 (import_declaration
   (string_literal) @import.source) @import
+
+(import_declaration
+  (import_specifier
+    (identifier) @name)) @import
 
 ; Re-export (export { X } from "module")
 (export_declaration
   (string_literal) @import.source) @import
 
-; ── Calls ────────────────────────────────────────────────────────────────────
+; ── Calls ───────────────────────────────────────────────────────────────────
 
 (call_expression
-  (expression
-    (identifier)) @call.name
+  (expression (identifier) @call.name)
   (argument_list)) @call
 
 (call_expression
-  (expression
-    (member_expression
-      (identifier) @call.name))
+  (expression (member_expression
+    (expression)
+    (identifier) @call.name))
   (argument_list)) @call
 
 (new_expression
-  (expression
-    (identifier)) @call.name) @call
+  (expression (identifier) @call.name)) @call
 
-; ── Heritage ─────────────────────────────────────────────────────────────────
-; extends: class Foo extends Bar — the parent type is in a bare type_annotation
+; ── Heritage ────────────────────────────────────────────────────────────────
+; extends: class Foo extends Bar
 (class_declaration
   (identifier) @heritage.class
-  (type_annotation
-    (primary_type
-      (identifier) @heritage.extends))) @heritage
+  (type_annotation (primary_type (identifier) @heritage.extends))) @heritage
 
 ; implements: class Foo implements IBaz
 (class_declaration
   (identifier) @heritage.class
-  (implements_clause
-    (identifier) @heritage.implements)) @heritage.impl
+  (implements_clause (_) @heritage.implements)) @heritage
 
-; ── Decorators ───────────────────────────────────────────────────────────────
-; Decorators attached to class/struct/component declarations
+; ── Exports ─────────────────────────────────────────────────────────────────
+(export_declaration (_) @export)
+
+; ArkTS decorated exports (@Component etc.)
+(decorated_export_declaration) @export
+
+; ── Assignments ─────────────────────────────────────────────────────────────
+(assignment_expression
+  (member_expression
+    (expression (_) @assignment.receiver)
+    (identifier) @assignment.property)
+  (expression (_))) @assignment
+
+; ── HTTP consumers ──────────────────────────────────────────────────────────
+(call_expression
+  (expression (identifier) @_fetch_fn) (#eq? @_fetch_fn "fetch")
+  (argument_list
+    (expression (string_literal) @route.url))) @route.fetch
+
+(call_expression
+  (expression (member_expression
+    (expression)
+    (identifier) @http_client.method))
+  (argument_list
+    (expression (string_literal) @http_client.url))) @http_client
+
+; ── Decorators: @Component, @Entry, @State, @Builder, etc. ──────────────────
+(decorator
+  (identifier) @decorator.name) @decorator
+
 (decorated_export_declaration
   (decorator
     (identifier) @decorator.name) @decorator)
@@ -1291,22 +1347,6 @@ export const ARKTS_QUERIES = `
 (component_declaration
   (decorator
     (identifier) @decorator.name) @decorator)
-
-; ── Assignments ──────────────────────────────────────────────────────────────
-(assignment_expression
-  (member_expression
-    (expression
-      (identifier) @assignment.receiver)
-    (identifier) @assignment.property)
-  (expression)) @assignment
-
-; ── HTTP / fetch consumers ───────────────────────────────────────────────────
-(call_expression
-  (expression
-    (identifier)) @_fetch_fn (#eq? @_fetch_fn "fetch")
-  (argument_list
-    (expression
-      (string_literal) @route.url))) @route.fetch
 `;
 
 import { SupportedLanguages } from 'gitnexus-shared';

@@ -1455,8 +1455,13 @@
             "type": "SEQ",
             "members": [
               {
-                "type": "STRING",
-                "value": "Text"
+                "type": "ALIAS",
+                "content": {
+                  "type": "STRING",
+                  "value": "Text"
+                },
+                "named": true,
+                "value": "identifier"
               },
               {
                 "type": "STRING",
@@ -1476,8 +1481,13 @@
             "type": "SEQ",
             "members": [
               {
-                "type": "STRING",
-                "value": "Button"
+                "type": "ALIAS",
+                "content": {
+                  "type": "STRING",
+                  "value": "Button"
+                },
+                "named": true,
+                "value": "identifier"
               },
               {
                 "type": "STRING",
@@ -1526,8 +1536,13 @@
             "type": "SEQ",
             "members": [
               {
-                "type": "STRING",
-                "value": "Image"
+                "type": "ALIAS",
+                "content": {
+                  "type": "STRING",
+                  "value": "Image"
+                },
+                "named": true,
+                "value": "identifier"
               },
               {
                 "type": "STRING",
@@ -1547,17 +1562,22 @@
             "type": "SEQ",
             "members": [
               {
-                "type": "CHOICE",
-                "members": [
-                  {
-                    "type": "STRING",
-                    "value": "TextInput"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "TextArea"
-                  }
-                ]
+                "type": "ALIAS",
+                "content": {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": "TextInput"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "TextArea"
+                    }
+                  ]
+                },
+                "named": true,
+                "value": "identifier"
               },
               {
                 "type": "STRING",
@@ -1585,49 +1605,54 @@
             "type": "SEQ",
             "members": [
               {
-                "type": "CHOICE",
-                "members": [
-                  {
-                    "type": "STRING",
-                    "value": "Column"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "Row"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "Stack"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "Flex"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "Grid"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "GridRow"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "GridCol"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "List"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "ScrollList"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "NavDestination"
-                  }
-                ]
+                "type": "ALIAS",
+                "content": {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": "Column"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "Row"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "Stack"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "Flex"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "Grid"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "GridRow"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "GridCol"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "List"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "ScrollList"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "NavDestination"
+                    }
+                  ]
+                },
+                "named": true,
+                "value": "identifier"
               },
               {
                 "type": "STRING",
@@ -1667,21 +1692,26 @@
             "type": "SEQ",
             "members": [
               {
-                "type": "CHOICE",
-                "members": [
-                  {
-                    "type": "STRING",
-                    "value": "ListItem"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "GridItem"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "ListItemGroup"
-                  }
-                ]
+                "type": "ALIAS",
+                "content": {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": "ListItem"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "GridItem"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "ListItemGroup"
+                    }
+                  ]
+                },
+                "named": true,
+                "value": "identifier"
               },
               {
                 "type": "STRING",

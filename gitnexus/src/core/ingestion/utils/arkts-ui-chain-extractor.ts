@@ -22,6 +22,12 @@ import type Parser from 'tree-sitter';
 import { ARKTS_UI_COMPONENTS } from '../languages/arkts.js';
 import type { SyntaxNode } from './ast-helpers.js';
 
+/** Extended set: built-in components + commonly missed ones like LazyForEach */
+const BUILT_IN_UI_COMPONENTS: ReadonlySet<string> = new Set([
+  ...ARKTS_UI_COMPONENTS,
+  'LazyForEach',
+]);
+
 /**
  * A synthetic query match that mimics the structure of tree-sitter Query matches.
  */
@@ -68,7 +74,7 @@ function findUiComponentInError(errorNode: SyntaxNode): SyntaxNode | null {
     const child = errorNode.child(i);
     if (child.type === 'property_name') {
       const ident = child.childForFieldName?.('name') ?? findChildOfType(child, 'identifier');
-      if (ident && ARKTS_UI_COMPONENTS.has(ident.text)) {
+      if (ident && BUILT_IN_UI_COMPONENTS.has(idText(ident))) {
         return ident;
       }
     }
@@ -77,7 +83,7 @@ function findUiComponentInError(errorNode: SyntaxNode): SyntaxNode | null {
   // Pattern 2: direct identifier child of ERROR that is a UI component
   for (let i = 0; i < errorNode.childCount; i++) {
     const child = errorNode.child(i);
-    if (child.type === 'identifier' && ARKTS_UI_COMPONENTS.has(child.text)) {
+    if (child.type === 'identifier' && BUILT_IN_UI_COMPONENTS.has(idText(child))) {
       return child;
     }
   }
@@ -103,23 +109,14 @@ function findDescendantUiComponent(node: SyntaxNode): SyntaxNode | null {
 
     // Check for call_expression with UI component as function
     if (n.type === 'call_expression') {
-      const func = n.childForFieldName?.('function');
-      if (func) {
-        if (func.type === 'identifier' && ARKTS_UI_COMPONENTS.has(func.text)) {
-          return func;
-        }
-        // member_expression: Text('hello').fontSize(20)
-        if (func.type === 'member_expression') {
-          const obj = func.childForFieldName?.('object');
-          if (obj?.type === 'identifier' && ARKTS_UI_COMPONENTS.has(obj.text)) {
-            return obj;
-          }
-        }
+      const func = getCallFunctionIdentifier(n);
+      if (func && BUILT_IN_UI_COMPONENTS.has(idText(func))) {
+        return func;
       }
     }
 
     // Check for bare identifier that's a UI component
-    if (n.type === 'identifier' && ARKTS_UI_COMPONENTS.has(n.text)) {
+    if (n.type === 'identifier' && BUILT_IN_UI_COMPONENTS.has(n.text)) {
       return n;
     }
 
@@ -174,6 +171,81 @@ function findChildOfType(node: SyntaxNode, type: string): SyntaxNode | null {
     if (node.child(i).type === type) return node.child(i);
   }
   return null;
+}
+
+/**
+ * Extract the function name node from a call_expression.
+ * ArkTS AST often wraps identifiers in `expression` nodes:
+ *   call_expression(expression(identifier), argument_list)
+ * So childForFieldName('function') may return an `expression` wrapper.
+ * This function unwraps that to get the actual identifier.
+ */
+function getCallFunctionIdentifier(callNode: SyntaxNode): SyntaxNode | null {
+  let func = callNode.childForFieldName?.('function') ?? callNode.child(0);
+  // Unwrap expression wrapper
+  if (func?.type === 'expression' && func.childCount === 1) {
+    func = func.child(0);
+  }
+  // member_expression: Text('x').fontSize(20)
+  if (func?.type === 'member_expression') {
+    func = func.childForFieldName?.('object') ?? func.child(0);
+    if (func?.type === 'expression' && func.childCount === 1) {
+      func = func.child(0);
+    }
+  }
+  if (func?.type === 'identifier') return func;
+  return null;
+}
+
+/**
+ * Check if a node is inside a build() method or @Builder decorated function.
+ */
+function isInsideBuilderContext(node: SyntaxNode): boolean {
+  let current: SyntaxNode | null = node.parent;
+  while (current) {
+    if (
+      current.type === 'build_method' ||
+      current.type === 'build_body' ||
+      current.type === 'arkts_ui_element'
+    ) {
+      return true;
+    }
+    if (current.type === 'method_declaration' && hasBuilderDecorator(current)) {
+      return true;
+    }
+    if (current.type === 'function_declaration' && hasBuilderDecorator(current)) {
+      return true;
+    }
+    if (current.type === 'source_file') break;
+    current = current.parent;
+  }
+  return false;
+}
+
+function hasBuilderDecorator(node: SyntaxNode): boolean {
+  const prev = node.previousNamedSibling;
+  if (prev?.type === 'decorator') {
+    const ident = findChildOfType(prev, 'identifier');
+    if (ident?.text === 'Builder') return true;
+    // Also check call-style: @Builder("name")
+    const call = findChildOfType(prev, 'call_expression');
+    if (call) {
+      const f = call.childForFieldName?.('function') ?? call.child(0);
+      if (f?.type === 'identifier' && f.text === 'Builder') return true;
+    }
+  }
+  return false;
+}
+
+/** Check if a string starts with an uppercase letter (component naming convention) */
+function isComponentName(name: string): boolean {
+  const trimmed = name.trimStart();
+  return trimmed.length > 0 && /^[A-Z]/.test(trimmed);
+}
+
+/** Get trimmed identifier text — tree-sitter-arkts identifiers may include leading whitespace */
+function idText(node: SyntaxNode): string {
+  return node.text.trimStart();
 }
 
 /**
@@ -242,26 +314,15 @@ function findCallExpressionsInSubtree(node: SyntaxNode, seen: Set<number>): Synt
   const matches: SyntheticMatch[] = [];
 
   if (node.type === 'call_expression' && !seen.has(node.startIndex)) {
-    const func = node.childForFieldName?.('function');
+    const func = getCallFunctionIdentifier(node);
     if (func) {
-      let nameNode: SyntaxNode | null = null;
-
-      if (func.type === 'identifier' && ARKTS_UI_COMPONENTS.has(func.text)) {
-        nameNode = func;
-      } else if (func.type === 'member_expression') {
-        const obj = func.childForFieldName?.('object');
-        if (obj?.type === 'identifier' && ARKTS_UI_COMPONENTS.has(obj.text)) {
-          nameNode = obj;
-        }
-      }
-
-      if (nameNode) {
+      if (BUILT_IN_UI_COMPONENTS.has(idText(func))) {
         seen.add(node.startIndex);
         matches.push({
           pattern: 0,
           captures: [
             { name: 'call', node },
-            { name: 'call.name', node: nameNode },
+            { name: 'call.name', node: func },
           ],
         });
         return matches; // don't recurse into this call's children
@@ -291,7 +352,7 @@ function findPropertyAssignmentUiCalls(root: SyntaxNode, seen: Set<number>): Syn
       if (propName) {
         const ident =
           propName.childForFieldName?.('name') ?? findChildOfType(propName, 'identifier');
-        if (ident && ARKTS_UI_COMPONENTS.has(ident.text) && !seen.has(ident.startIndex)) {
+        if (ident && BUILT_IN_UI_COMPONENTS.has(idText(ident)) && !seen.has(ident.startIndex)) {
           seen.add(ident.startIndex);
           matches.push({
             pattern: 0,
@@ -324,6 +385,110 @@ function findPropertyAssignmentUiCalls(root: SyntaxNode, seen: Set<number>): Syn
  * @param _content - The file content (reserved for future regex fallback)
  * @returns Array of synthetic query matches
  */
+
+/**
+ * Strategy 4: Find custom (user-defined) component instantiations.
+ * These are call_expressions where the function identifier is PascalCase
+ * and not in the built-in UI_COMPONENTS set, but is used inside a builder context.
+ * Only walks inside builder contexts to limit false positives.
+ */
+function findCustomComponentCalls(root: SyntaxNode, seen: Set<number>): SyntheticMatch[] {
+  const matches: SyntheticMatch[] = [];
+
+  // Find builder context nodes first, then walk inside them.
+  // We cannot use isInsideBuilderContext on every node because
+  // the root (source_file) is not inside a builder context, which
+  // would cause the walk to skip the entire tree.
+  const builderContexts: SyntaxNode[] = [];
+  const collectBuilderContexts = (node: SyntaxNode) => {
+    if (
+      node.type === 'build_method' ||
+      node.type === 'build_body' ||
+      node.type === 'arkts_ui_element'
+    ) {
+      builderContexts.push(node);
+    }
+    if (
+      (node.type === 'method_declaration' || node.type === 'function_declaration') &&
+      hasBuilderDecorator(node)
+    ) {
+      builderContexts.push(node);
+    }
+    for (let i = 0; i < node.childCount; i++) {
+      collectBuilderContexts(node.child(i));
+    }
+  };
+  collectBuilderContexts(root);
+
+  const walk = (node: SyntaxNode) => {
+    if (node.type === 'call_expression' && !seen.has(node.startIndex)) {
+      const func = getCallFunctionIdentifier(node);
+      if (func && !BUILT_IN_UI_COMPONENTS.has(idText(func)) && isComponentName(idText(func))) {
+        seen.add(node.startIndex);
+        matches.push({
+          pattern: 0,
+          captures: [
+            { name: 'call', node },
+            { name: 'call.name', node: func },
+          ],
+        });
+        return; // don't recurse into this call's arguments
+      }
+    }
+
+    for (let i = 0; i < node.childCount; i++) {
+      walk(node.child(i));
+    }
+  };
+
+  for (const ctx of builderContexts) {
+    walk(ctx);
+  }
+
+  return matches;
+}
+
+/**
+ * Strategy 5: Find `ui_component > identifier` nodes from clean ArkTS parses.
+ * tree-sitter-arkts produces `arkts_ui_element > ui_element_with_modifiers > ui_component > identifier`
+ * for well-formed UI code. Custom components here would be missed by all other strategies.
+ */
+function findUiComponentNodes(root: SyntaxNode, seen: Set<number>): SyntheticMatch[] {
+  const matches: SyntheticMatch[] = [];
+
+  const walk = (node: SyntaxNode) => {
+    if (node.type === 'ui_component') {
+      const ident = findChildOfType(node, 'identifier');
+      if (ident && !seen.has(ident.startIndex)) {
+        // Accept if it's a built-in or a PascalCase custom component
+        const isKnown = BUILT_IN_UI_COMPONENTS.has(idText(ident));
+        const isCustom = isComponentName(idText(ident));
+        if (isKnown || isCustom) {
+          seen.add(ident.startIndex);
+          // Use the parent arkts_ui_element or ui_component as the call node
+          const callNode =
+            node.parent?.type === 'ui_element_with_modifiers'
+              ? (node.parent.parent ?? node.parent)
+              : (node.parent ?? node);
+          matches.push({
+            pattern: 0,
+            captures: [
+              { name: 'call', node: callNode },
+              { name: 'call.name', node: ident },
+            ],
+          });
+        }
+      }
+    }
+
+    for (let i = 0; i < node.childCount; i++) {
+      walk(node.child(i));
+    }
+  };
+
+  walk(root);
+  return matches;
+}
 export function extractArktsUiChainMatches(tree: Parser.Tree, _content?: string): SyntheticMatch[] {
   const root = tree.rootNode;
   const matches: SyntheticMatch[] = [];
@@ -340,6 +505,17 @@ export function extractArktsUiChainMatches(tree: Parser.Tree, _content?: string)
 
   // Strategy 3: Scan for call_expression nodes with UI components anywhere in the tree
   matches.push(...findCallExpressionsInSubtree(root, seen));
+
+  // Strategy 4: Find custom component call_expressions in builder context.
+  // Custom components (e.g., MyWidget) are PascalCase identifiers used as
+  // call_expression targets inside build()/@Builder bodies.
+  matches.push(...findCustomComponentCalls(root, seen));
+
+  // Strategy 5: Find ui_component nodes (clean parse path for custom components).
+  // tree-sitter-arkts produces `arkts_ui_element > ui_component > identifier`
+  // for well-formed code. Built-in components are already in UI_COMPONENTS,
+  // but custom ones are not and would be missed.
+  matches.push(...findUiComponentNodes(root, seen));
 
   return matches;
 }
