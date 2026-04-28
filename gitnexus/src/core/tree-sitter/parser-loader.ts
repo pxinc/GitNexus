@@ -31,7 +31,7 @@ try {
 } catch {}
 let ArkTS: any = null;
 try {
-  ArkTS = _require('tree-sitter-arkts');
+  ArkTS = _require('@mtfe/tree-sitter-arkts');
 } catch {}
 
 let parser: Parser | null = null;

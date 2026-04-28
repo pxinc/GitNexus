@@ -40,7 +40,7 @@ try {
 } catch {}
 let ArkTS: TreeSitterLanguage | null = null;
 try {
-  ArkTS = _require('tree-sitter-arkts');
+  ArkTS = _require('@mtfe/tree-sitter-arkts');
 } catch {}
 import { getLanguageFromFilename } from 'gitnexus-shared';
 import {
