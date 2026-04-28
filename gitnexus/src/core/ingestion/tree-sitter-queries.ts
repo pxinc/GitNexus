@@ -1379,6 +1379,9 @@ export const ARKTS_QUERIES = `
 (method_declaration
   (identifier) @name) @definition.method
 
+; ArkUI build method (tree-sitter-arkts parses build() as build_method, not method_declaration)
+(build_method) @definition.method
+
 ; Property (class field with value)
 (property_declaration
   (identifier) @name
