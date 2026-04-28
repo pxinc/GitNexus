@@ -6,6 +6,8 @@
  */
 
 import { pipeline, env, type FeatureExtractionPipeline } from '@huggingface/transformers';
+import os from 'os';
+import { join } from 'path';
 import {
   isHttpMode,
   getHttpDimensions,
@@ -42,6 +44,11 @@ export const initEmbedder = async (): Promise<FeatureExtractionPipeline> => {
   initPromise = (async () => {
     try {
       env.allowLocalModels = false;
+      // Default cache to user-writable location. transformers.js defaults to
+      // ./node_modules/.cache inside its own install dir, which is unwritable
+      // when gitnexus is installed globally (e.g. /usr/lib/node_modules/).
+      // Respect HF_HOME if set, otherwise fall back to ~/.cache/huggingface.
+      env.cacheDir = process.env.HF_HOME ?? join(os.homedir(), '.cache', 'huggingface');
 
       console.error('GitNexus: Loading embedding model (first search may take a moment)...');
 

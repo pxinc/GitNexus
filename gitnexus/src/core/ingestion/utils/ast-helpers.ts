@@ -1,5 +1,5 @@
 import type Parser from 'tree-sitter';
-import type { NodeLabel } from 'gitnexus-shared';
+import type { Capture, NodeLabel, Range } from 'gitnexus-shared';
 import type { LanguageProvider } from '../language-provider.js';
 import { generateId } from '../../../lib/utils.js';
 
@@ -24,6 +24,7 @@ export const DEFINITION_CAPTURE_KEYS = [
   'definition.type',
   'definition.const',
   'definition.static',
+  'definition.variable',
   'definition.typedef',
   'definition.macro',
   'definition.union',
@@ -155,13 +156,35 @@ export const CONTAINER_TYPE_TO_LABEL: Record<string, string> = {
   mixin_declaration: 'Mixin',
   extension_declaration: 'Extension',
   class: 'Class',
-  module: 'Module',
+  // Ruby `module` declarations map to `Trait` so they participate in the
+  // class-like type registry used by `lookupClassByName` / `buildHeritageMap`.
+  // This lets `include` / `extend` / `prepend` mixin heritage resolve to
+  // the providing module. Safe for non-Ruby languages: the only supported
+  // grammar that uses the bare `module` AST node type as a container is
+  // Ruby (Rust uses `mod_item`). Any new language adding a `module` node
+  // type must explicitly reclassify here.
+  module: 'Trait',
   singleton_class: 'Class', // Ruby: class << self inherits enclosing class name
   object_declaration: 'Class',
   companion_object: 'Class',
   component_declaration: 'Class',
   decorated_export_declaration: 'Class',
 };
+
+/** Return the first matching ancestor unless a boundary ancestor is reached first. */
+export function findAncestorBeforeBoundary(
+  node: SyntaxNode,
+  targetTypes: ReadonlySet<string>,
+  boundaryTypes: ReadonlySet<string>,
+): SyntaxNode | null {
+  let current = node.parent;
+  while (current !== null) {
+    if (boundaryTypes.has(current.type)) return null;
+    if (targetTypes.has(current.type)) return current;
+    current = current.parent;
+  }
+  return null;
+}
 
 /**
  * Determine the graph node label from a tree-sitter capture map.
@@ -189,12 +212,23 @@ export function getLabelFromCaptures(
   if (captureMap['definition.struct']) return 'Struct';
   if (captureMap['definition.enum']) return 'Enum';
   if (captureMap['definition.namespace']) return 'Namespace';
-  if (captureMap['definition.module']) return 'Module';
+  if (captureMap['definition.module']) {
+    // Let providers reclassify module captures (e.g. Ruby remaps `Module`→`Trait`
+    // so mixin heritage resolves through `lookupClassByName`). Returning null
+    // from labelOverride means "skip this symbol"; treat it as a no-op here so
+    // we keep the default label rather than dropping a real definition.
+    if (provider.labelOverride) {
+      const override = provider.labelOverride(captureMap['definition.module'], 'Module');
+      if (override && override !== 'Module') return override;
+    }
+    return 'Module';
+  }
   if (captureMap['definition.trait']) return 'Trait';
   if (captureMap['definition.impl']) return 'Impl';
   if (captureMap['definition.type']) return 'TypeAlias';
   if (captureMap['definition.const']) return 'Const';
   if (captureMap['definition.static']) return 'Static';
+  if (captureMap['definition.variable']) return 'Variable';
   if (captureMap['definition.typedef']) return 'Typedef';
   if (captureMap['definition.macro']) return 'Macro';
   if (captureMap['definition.union']) return 'Union';
@@ -214,13 +248,39 @@ export interface EnclosingClassInfo {
 }
 
 /** Walk up AST to find enclosing class/struct/interface/impl, return its ID and name.
- *  For Go method_declaration nodes, extracts receiver type (e.g. `func (u *User) Save()` → User struct). */
+ *  For Go method_declaration nodes, extracts receiver type (e.g. `func (u *User) Save()` → User struct).
+ *
+ *  @param resolveEnclosingOwner  Optional language-specific hook for container remapping.
+ *    When provided and a CLASS_CONTAINER_TYPES node is found, this hook is called:
+ *    - Return a different SyntaxNode to remap the container (e.g., Ruby singleton_class → class).
+ *    - Return `null` to skip this container and keep walking up.
+ *    - Return the input node (identity) to use the container as-is.
+ *    When omitted, the container node is used as-is.
+ *
+ *    INVARIANT: Implementers SHOULD return either `null`, the input node, or
+ *    another CLASS_CONTAINER_TYPES node. Returning a non-container node is
+ *    permitted but discouraged — it will cause the walk to skip the current
+ *    container and continue from the redirected node's parent. The
+ *    `MAX_ENCLOSING_WALK_ITERATIONS` defense-in-depth guard below prevents
+ *    pathological hooks from creating an infinite loop. */
+const MAX_ENCLOSING_WALK_ITERATIONS = 4096;
+
 export const findEnclosingClassInfo = (
   node: SyntaxNode,
   filePath: string,
+  resolveEnclosingOwner?: (node: SyntaxNode) => SyntaxNode | null,
 ): EnclosingClassInfo | null => {
   let current = node.parent;
+  let iterations = 0;
+  // Tracks container nodes already visited via the hook so a misbehaving hook
+  // that keeps redirecting back to the same container cannot loop forever.
+  const visitedContainers = new Set<SyntaxNode>();
   while (current) {
+    if (++iterations > MAX_ENCLOSING_WALK_ITERATIONS) {
+      // Defense-in-depth: a real source tree has nowhere near this many ancestors.
+      // Bail out rather than hang ingestion.
+      return null;
+    }
     // Go: method_declaration has a receiver parameter with the struct type
     if (current.type === 'method_declaration') {
       const receiver = current.childForFieldName?.('receiver');
@@ -260,6 +320,29 @@ export const findEnclosingClassInfo = (
       }
     }
     if (CLASS_CONTAINER_TYPES.has(current.type)) {
+      // Delegate language-specific container remapping to the provider hook.
+      if (resolveEnclosingOwner) {
+        if (visitedContainers.has(current)) {
+          // We've already asked the hook about this container once — a loop
+          // would form (e.g., hook redirects to a child node whose parent is
+          // this same container). Skip and walk up.
+          current = current.parent;
+          continue;
+        }
+        visitedContainers.add(current);
+        const resolved = resolveEnclosingOwner(current);
+        if (resolved === null) {
+          // Provider says skip this container — keep walking up.
+          current = current.parent;
+          continue;
+        }
+        if (resolved !== current) {
+          // Provider remapped to a different node — re-evaluate from there.
+          current = resolved;
+          continue;
+        }
+      }
+
       // Rust impl_item: for `impl Trait for Struct {}`, pick the type after `for`
       // NOTE: This impl_item ownership logic is duplicated in rust.ts:extractOwnerName.
       // If modifying this block, update the other location too.
@@ -289,26 +372,6 @@ export const findEnclosingClassInfo = (
             className: firstType.text,
           };
         }
-      }
-
-      // Ruby singleton_class (class << self): walk up to the enclosing class/module
-      // to inherit its name. singleton_class has no name field — its receiver is
-      // `self` (node type 'self'), not 'identifier' or 'constant'.
-      if (current.type === 'singleton_class') {
-        let ancestor = current.parent;
-        while (ancestor) {
-          if (ancestor.type === 'class' || ancestor.type === 'module') {
-            const classNameNode = ancestor.childForFieldName?.('name');
-            if (classNameNode) {
-              return {
-                classId: generateId('Class', `${filePath}:${classNameNode.text}`),
-                className: classNameNode.text,
-              };
-            }
-          }
-          ancestor = ancestor.parent;
-        }
-        // No enclosing class/module — skip singleton_class and keep walking up
       }
 
       const nameNode =
@@ -417,11 +480,16 @@ export const CALL_ARGUMENT_LIST_TYPES = new Set(['arguments', 'argument_list', '
 // ============================================================================
 
 /** Walk an AST node depth-first, returning the first descendant with the given type. */
-export function findDescendant(node: SyntaxNode, type: string): SyntaxNode | null {
-  if (node.type === type) return node;
-  for (const child of node.children ?? []) {
-    const found = findDescendant(child, type);
-    if (found) return found;
+export function findDescendant(root: SyntaxNode, type: string): SyntaxNode | null {
+  const stack: SyntaxNode[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop()!;
+    if (node.type === type) return node;
+    // Push in reverse order so left children are visited first (depth-first)
+    const children = node.children ?? [];
+    for (let i = children.length - 1; i >= 0; i--) {
+      stack.push(children[i]);
+    }
   }
   return null;
 }
@@ -440,6 +508,84 @@ export function findChild(node: SyntaxNode, type: string): SyntaxNode | null {
   for (let i = 0; i < node.namedChildCount; i++) {
     const child = node.namedChild(i);
     if (child?.type === type) return child;
+  }
+  return null;
+}
+
+// ============================================================================
+// Capture + range helpers (formerly python/ast-utils.ts — language-agnostic)
+// ============================================================================
+
+/** Convert a tree-sitter node to a `Capture` with 1-based line numbers
+ *  (matching RFC §2.1). The tag includes the leading `@`. */
+export function nodeToCapture(name: string, node: SyntaxNode): Capture {
+  return {
+    name,
+    range: {
+      startLine: node.startPosition.row + 1,
+      startCol: node.startPosition.column,
+      endLine: node.endPosition.row + 1,
+      endCol: node.endPosition.column,
+    },
+    text: node.text,
+  };
+}
+
+/** Build a `Capture` whose range mirrors `atNode` but whose `text` is
+ *  caller-supplied. Used to synthesize markers that don't have a
+ *  corresponding source token. */
+export function syntheticCapture(name: string, atNode: SyntaxNode, text: string): Capture {
+  return {
+    name,
+    range: {
+      startLine: atNode.startPosition.row + 1,
+      startCol: atNode.startPosition.column,
+      endLine: atNode.endPosition.row + 1,
+      endCol: atNode.endPosition.column,
+    },
+    text,
+  };
+}
+
+function rangeMatches(node: SyntaxNode, range: Range): boolean {
+  return (
+    node.startPosition.row + 1 === range.startLine &&
+    node.startPosition.column === range.startCol &&
+    node.endPosition.row + 1 === range.endLine &&
+    node.endPosition.column === range.endCol
+  );
+}
+
+/** Walk a subtree to find a node whose range exactly matches AND whose
+ *  type matches `expectedType` (when given). When multiple nodes share
+ *  the range — e.g., `function_definition` and its inner `block` body
+ *  for a one-liner — the type filter disambiguates.
+ *
+ *  Iterative depth-first-left-to-right via an explicit stack. Children
+ *  are pushed in reverse index order so LIFO pop visits them in source
+ *  order. Prunes branches that can't contain the target range by
+ *  row bounds — same optimization the prior recursive form used, minus
+ *  the early-break since stack-push is cheap. */
+export function findNodeAtRange(
+  root: SyntaxNode,
+  range: Range,
+  expectedType?: string,
+): SyntaxNode | null {
+  const startRow = range.startLine - 1;
+  const endRow = range.endLine - 1;
+  const stack: SyntaxNode[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop()!;
+    if (rangeMatches(node, range) && (expectedType === undefined || node.type === expectedType)) {
+      return node;
+    }
+    for (let i = node.namedChildCount - 1; i >= 0; i--) {
+      const child = node.namedChild(i);
+      if (child === null) continue;
+      if (child.endPosition.row < startRow) continue;
+      if (child.startPosition.row > endRow) continue;
+      stack.push(child);
+    }
   }
   return null;
 }
