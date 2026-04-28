@@ -34,8 +34,7 @@
     "dist",
     "hooks",
     "scripts",
-    "skills",
-    "vendor"
+    "skills"
   ],
   "scripts": {
     "build": "node scripts/build.js",
@@ -48,7 +47,7 @@
     "test:coverage": "vitest run --coverage",
     "prepare": "node scripts/build.js",
     "prepack": "node scripts/build.js",
-    "postinstall": "bash scripts/patch-tree-sitter-arkts.sh"
+    "postinstall": "echo '[gitnexus] postinstall: skipping tree-sitter-arkts patch (using independent package)'"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.0.0",
@@ -71,7 +70,7 @@
     "onnxruntime-node": "^1.24.0",
     "pandemonium": "^2.4.0",
     "tree-sitter": "^0.25.0",
-    "tree-sitter-arkts": "github:Million-mo/tree-sitter-arkts",
+    "tree-sitter-arkts": "file:../../tree-sitter-arkts",
     "tree-sitter-c": "0.23.2",
     "tree-sitter-c-sharp": "^0.23.1",
     "tree-sitter-cpp": "^0.23.4",
