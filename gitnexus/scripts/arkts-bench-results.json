@@ -1,0 +1,430 @@
+{
+  "total": 13347,
+  "success": 13287,
+  "error": 60,
+  "crash": 0,
+  "errorFiles": [
+    {
+      "file": "ArkTS-Sta/TabsSample/entry/src/main/ets/entryability/EntryAbility.ets",
+      "category": "other",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "BasicFeature/Connectivity/MultipleFilesDownload/entry/src/ohosTest/ets/test/Ability.test.ets",
+      "category": "other",
+      "errorCount": 4,
+      "firstErrorLine": 325,
+      "firstErrorSnippet": "      let fileFive = await driver.findComponent(ON.id('banner_movie4.pngstate'));"
+    },
+    {
+      "file": "BasicFeature/DFX/Logger/log/src/main/ets/components/mainpage/Configure.ets",
+      "category": "other",
+      "errorCount": 5,
+      "firstErrorLine": 17,
+      "firstErrorSnippet": "export class Configure {"
+    },
+    {
+      "file": "BasicFeature/DataManagement/Preferences/entry/src/main/ets/common/ThemeDesktop.ets",
+      "category": "other",
+      "errorCount": 4,
+      "firstErrorLine": 19,
+      "firstErrorSnippet": "  @Link themeDatas: Array<{"
+    },
+    {
+      "file": "BasicFeature/DataManagement/Preferences/entry/src/main/ets/pages/Index.ets",
+      "category": "type_assertion",
+      "errorCount": 4,
+      "firstErrorLine": 57,
+      "firstErrorSnippet": "@Entry"
+    },
+    {
+      "file": "BasicFeature/DeviceManagement/Location/position/src/main/ets/components/pages/Location.ets",
+      "category": "large_component_glr",
+      "errorCount": 2,
+      "firstErrorLine": 179,
+      "firstErrorSnippet": "                        Text(`${item.name === undefined ? item : item.name}`)"
+    },
+    {
+      "file": "BasicFeature/Graphics/Graphics3d/entry/src/ohosTest/ets/test/Ability.test.ets",
+      "category": "callback_closure",
+      "errorCount": 1,
+      "firstErrorLine": 25,
+      "firstErrorSnippet": "export default function abilityTest() {"
+    },
+    {
+      "file": "BasicFeature/Media/Audio/entry/src/ohosTest/ets/test/Ability.test.ets",
+      "category": "other",
+      "errorCount": 3,
+      "firstErrorLine": 1184,
+      "firstErrorSnippet": "      Logger.info(TAG, 'KaraokePage_Disable_004 end');"
+    },
+    {
+      "file": "BasicFeature/Media/VideoPlay/entry/src/main/ets/pages/ThumbnailGet.ets",
+      "category": "other",
+      "errorCount": 1,
+      "firstErrorLine": 22,
+      "firstErrorSnippet": "  @State pixelMap: PixelMap|undefined[] = [undefined, undefined, undefined, undefined, undefined]"
+    },
+    {
+      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/common/BundleInfo.ets",
+      "category": "other",
+      "errorCount": 10,
+      "firstErrorLine": 73,
+      "firstErrorSnippet": "  private dataArray: Array<{"
+    },
+    {
+      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/common/ModifyInfo.ets",
+      "category": "large_component_glr",
+      "errorCount": 25,
+      "firstErrorLine": 77,
+      "firstErrorSnippet": "class MyDataSource extends BasicDataSource {"
+    },
+    {
+      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/common/RegisterInfo.ets",
+      "category": "large_component_glr",
+      "errorCount": 24,
+      "firstErrorLine": 75,
+      "firstErrorSnippet": "class MyDataSource extends BasicDataSource {"
+    },
+    {
+      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Account.ets",
+      "category": "type_assertion",
+      "errorCount": 16,
+      "firstErrorLine": 22,
+      "firstErrorSnippet": "  @State email: string = <string> router.getParams()['email']"
+    },
+    {
+      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Login.ets",
+      "category": "type_assertion",
+      "errorCount": 4,
+      "firstErrorLine": 22,
+      "firstErrorSnippet": "  @State bundleName: string = <string> router.getParams()[\"bundleName\"]"
+    },
+    {
+      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Modify.ets",
+      "category": "type_assertion",
+      "errorCount": 16,
+      "firstErrorLine": 22,
+      "firstErrorSnippet": "  @State username: string = <string> router.getParams()[\"username\"];"
+    },
+    {
+      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Register.ets",
+      "category": "type_assertion",
+      "errorCount": 4,
+      "firstErrorLine": 22,
+      "firstErrorSnippet": "  @State bundleName: string = <string> router.getParams()['bundleName']"
+    },
+    {
+      "file": "BasicFeature/Telephony/Contact/entry/src/main/ets/pages/EditContact.ets",
+      "category": "other",
+      "errorCount": 8,
+      "firstErrorLine": 32,
+      "firstErrorSnippet": "  @State contact: contact.Contact = <contact.Contact> router.getParams()['data']"
+    },
+    {
+      "file": "BasicFeature/Telephony/Contact/entry/src/main/ets/pages/NameCard.ets",
+      "category": "other",
+      "errorCount": 6,
+      "firstErrorLine": 22,
+      "firstErrorSnippet": "  private contact = <contact.Contact> router.getParams()['data']"
+    },
+    {
+      "file": "BasicFeature/Telephony/MobileNetwork/entry/src/main/ets/common/NetWork.ets",
+      "category": "other",
+      "errorCount": 6,
+      "firstErrorLine": 34,
+      "firstErrorSnippet": "  @Builder dataState($$: {"
+    },
+    {
+      "file": "BasicFeature/Web/Browser/entry/src/main/ets/common/PhoneLayout.ets",
+      "category": "other",
+      "errorCount": 12,
+      "firstErrorLine": 24,
+      "firstErrorSnippet": "@Component"
+    },
+    {
+      "file": "BasicFeature/Web/Browser/entry/src/main/ets/common/TitleBar.ets",
+      "category": "large_component_glr",
+      "errorCount": 20,
+      "firstErrorLine": 28,
+      "firstErrorSnippet": "@Component"
+    },
+    {
+      "file": "DocsSample/ArkTS/ArkTsConcurrent/MultithreadedConcurrency/TaskPoolIntroduction/entry/src/main/ets/managers/returnpromise.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 120,
+      "firstErrorSnippet": "    .height('100%')\r"
+    },
+    {
+      "file": "DocsSample/ArkTS/Start/LearningArkTS/CodingStyleGuide/entry/src/main/ets/pages/Index.ets",
+      "category": "large_component_glr",
+      "errorCount": 3,
+      "firstErrorLine": 304,
+      "firstErrorSnippet": "  } else { // else 与其前面的大括号 } 之间增加空格"
+    },
+    {
+      "file": "DocsSample/ArkTS/Start/LearningArkTS/IntroductionToArkTS/entry/src/main/ets/pages/BasicKnowledge.ets",
+      "category": "large_component_glr",
+      "errorCount": 3,
+      "firstErrorLine": 266,
+      "firstErrorSnippet": "  case label1: // 如果label1匹配，则执行"
+    },
+    {
+      "file": "DocsSample/ArkTS/Start/LearningArkTS/IntroductionToArkTS/entry/src/main/ets/pages/NameAnno.d.ets",
+      "category": "other",
+      "errorCount": 1,
+      "firstErrorLine": 23,
+      "firstErrorSnippet": "export declare class MyClass {"
+    },
+    {
+      "file": "DocsSample/ArkTS/Start/LearningArkTS/MigrationFromOtherLanguagesToArkTS/MigratingFromSwiftToArkTS/entry/src/main/ets/pages/Index.ets",
+      "category": "large_component_glr",
+      "errorCount": 5,
+      "firstErrorLine": 424,
+      "firstErrorSnippet": "      .backgroundColor('#F1F3F5')"
+    },
+    {
+      "file": "DocsSample/ArkTS/Start/LearningArkTS/MigrationFromTypeScriptToArkTS/TsToArkTSRules/entry/src/main/ets/ArkTSLimitations/ExportMod.ets",
+      "category": "other",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "DocsSample/ArkTS/Start/LearningArkTS/MigrationFromTypeScriptToArkTS/TsToArkTSRules/entry/src/main/ets/ArkTSLimitations/NoAsConst.ets",
+      "category": "other",
+      "errorCount": 1,
+      "firstErrorLine": 27,
+      "firstErrorSnippet": "  public text: 'hello',"
+    },
+    {
+      "file": "DocsSample/ArkTS/Start/LearningArkTS/MigrationFromTypeScriptToArkTS/TsToArkTSRules/entry/src/main/ets/ArkTSLimitations/NoCommaOutsideloops.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 15,
+      "firstErrorSnippet": "for (let i = 0, j = 0; i < 10; ++i, j += 2) {"
+    },
+    {
+      "file": "DocsSample/ArkUISample/Animation/entry/src/main/ets/pages/compTransition/template4/Index.ets",
+      "category": "other",
+      "errorCount": 4,
+      "firstErrorLine": 17,
+      "firstErrorSnippet": "@Entry"
+    },
+    {
+      "file": "DocsSample/ArkUISample/Animation/entry/src/main/ets/pages/compTransition/template6/Index.ets",
+      "category": "other",
+      "errorCount": 4,
+      "firstErrorLine": 16,
+      "firstErrorSnippet": "@Entry"
+    },
+    {
+      "file": "DocsSample/ArkUISample/ComponentSnapshot/entry/src/main/ets/common/ImageUtils.ets",
+      "category": "other",
+      "errorCount": 4,
+      "firstErrorLine": 42,
+      "firstErrorSnippet": "    // Except for the first screenshot, you don't need to crop it, and you need to crop the new parts"
+    },
+    {
+      "file": "DocsSample/ArkUISample/PersistenceV2/entry/src/main/ets/pages/TopLevelArrayClassA.ets",
+      "category": "other",
+      "errorCount": 1,
+      "firstErrorLine": 33,
+      "firstErrorSnippet": "    type: Array<ClassA>,\r"
+    },
+    {
+      "file": "DocsSample/ArkUISample/PersistenceV2/entry/src/main/ets/pages/TopLevelArrayClassAAPIs.ets",
+      "category": "other",
+      "errorCount": 1,
+      "firstErrorLine": 29,
+      "firstErrorSnippet": "    type: Array<ClassA>,\r"
+    },
+    {
+      "file": "DocsSample/ArkUISample/PersistenceV2/entry/src/main/ets/pages/TopLevelCollectionsArray.ets",
+      "category": "other",
+      "errorCount": 1,
+      "firstErrorLine": 25,
+      "firstErrorSnippet": "    type: collections.Array<number>,\r"
+    },
+    {
+      "file": "DocsSample/ArkUISample/RenderingControl/entry/src/main/ets/pages/RenderingForeach/ArticleListView2.ets",
+      "category": "other",
+      "errorCount": 4,
+      "firstErrorLine": 62,
+      "firstErrorSnippet": "@Component"
+    },
+    {
+      "file": "DocsSample/ArkUISample/RenderingControl/entry/src/main/ets/pages/RenderingForeach/ArticleListView3.ets",
+      "category": "other",
+      "errorCount": 4,
+      "firstErrorLine": 80,
+      "firstErrorSnippet": "@Component"
+    },
+    {
+      "file": "DocsSample/ArkUISample/TextComponent/entry/src/main/ets/pages/richEditor/AddEvent.ets",
+      "category": "large_component_glr",
+      "errorCount": 4,
+      "firstErrorLine": 105,
+      "firstErrorSnippet": "@Component"
+    },
+    {
+      "file": "DocsSample/BackGroundTasksKit/ContinuousTask/entry/src/main/ets/MainAbility/BgTaskAbility.ets",
+      "category": "other",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "DocsSample/BackGroundTasksKit/ContinuousTask/entry/src/main/ets/pages/audioPlayback/AudioPlaybackIndex.ets",
+      "category": "large_component_glr",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "DocsSample/BundleManagerDocsSample/HspSample/library/src/main/ets/pages/Back.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 66,
+      "firstErrorSnippet": "              url: '@bundle:com.samples.hspsample/library/ets/pages/Menu' //路径为：`library/src/main/ets/pages/Menu.ets\r"
+    },
+    {
+      "file": "DocsSample/Media/Audio/Midi/entry/src/main/ets/pages/Index.ets",
+      "category": "large_component_glr",
+      "errorCount": 71,
+      "firstErrorLine": 127,
+      "firstErrorSnippet": "function getFontSize(config: FontSizesConfig, category: keyof FontSizesConfig, breakpoint: BreakpointType): number {"
+    },
+    {
+      "file": "DocsSample/Test/jsunit/entry/src/ohosTest/ets/test/mock/AfterReturn.test.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 41,
+      "firstErrorSnippet": "      expect(claser.method_1('testB')).assertUndefined(); // 断言执行通过"
+    },
+    {
+      "file": "Project/ApplicationHap/MultiHap/entry/src/ohosTest/ets/test/Ability.test.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 164,
+      "firstErrorSnippet": "     * input：\"1、播点击播放按钮"
+    },
+    {
+      "file": "Solutions/Game/Game2048/entry/src/main/ets/model/GameRule.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 165,
+      "firstErrorSnippet": "  dataChange(a: number, b: number, next: number, direction: string): {"
+    },
+    {
+      "file": "Solutions/Game/Lottie/entry/src/ohosTest/ets/test/Ability.test.ets",
+      "category": "other",
+      "errorCount": 1,
+      "firstErrorLine": 166,
+      "firstErrorSnippet": "      Logger.info(TAG, `${BUNDLE}DestroyAnimationFunction_001 end`);"
+    },
+    {
+      "file": "Solutions/Shopping/OrangeShopping/feature/detailPageHsp/src/main/ets/components/Location.ets",
+      "category": "other",
+      "errorCount": 1,
+      "firstErrorLine": 138,
+      "firstErrorSnippet": "                      Text(`${(item as CityType).name === undefined ? item : (item as CityType).name}`)"
+    },
+    {
+      "file": "SystemFeature/AutoFill/AutoFillScenarioization/entry/src/main/ets/autofillpages/SelectorList.ets",
+      "category": "other",
+      "errorCount": 6,
+      "firstErrorLine": 22,
+      "firstErrorSnippet": "let type: number | undefined = storage.get<number>('autoFillType');\r"
+    },
+    {
+      "file": "SystemFeature/DeviceManagement/DeviceManagementCollection/feature/capabilities/src/main/ets/util/BatteryInfoUtil.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 334,
+      "firstErrorSnippet": "    }).catch((err: BusinessError) => {"
+    },
+    {
+      "file": "SystemFeature/FileManagement/Photos/entry/src/main/ets/components/AlbumGridItemNewStyle.ets",
+      "category": "large_component_glr",
+      "errorCount": 4,
+      "firstErrorLine": 294,
+      "firstErrorSnippet": "          uri: 'pages/PhotoGridPage',"
+    },
+    {
+      "file": "SystemFeature/ResourceAllocation/ApplicationThemeSwitch/entry/src/main/ets/pages/Index.ets",
+      "category": "other",
+      "errorCount": 11,
+      "firstErrorLine": 51,
+      "firstErrorSnippet": "  @StorageLink('shoppingCartGoodsList') shoppingCartGoodsList: { data: { id: number } }[] = []"
+    },
+    {
+      "file": "SystemFeature/TV/TVPhotos/smbProtocol/src/main/ets/smb/Header.ets",
+      "category": "other",
+      "errorCount": 1,
+      "firstErrorLine": 60,
+      "firstErrorSnippet": "};"
+    },
+    {
+      "file": "SystemFeature/TV/TVSettings/product/tv/src/main/ets/MainAbility/MainAbility.ets",
+      "category": "callback_closure",
+      "errorCount": 16,
+      "firstErrorLine": 157,
+      "firstErrorSnippet": "  const matches = wantString.match(/\"ohos\\.aafwk\\.param\\.callerBundleName\"\\s*:\\s*\"([^\"]*)\"/);\r"
+    },
+    {
+      "file": "SystemFeature/TV/TVSettings/product/tv/src/main/ets/model/aboutDeviceImpl/AboutDeviceModel.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 182,
+      "firstErrorSnippet": "      let wifiMacadress = JSON.stringify(wifiMac).replace(/\"/g, '')"
+    },
+    {
+      "file": "SystemFeature/TV/TVSettings/product/tv/src/main/ets/model/wifiImpl/WifiModel.ets",
+      "category": "callback_closure",
+      "errorCount": 2,
+      "firstErrorLine": 899,
+      "firstErrorSnippet": "    return (ipNum >>> 24) + '.' + (ipNum >> 16 & 0xFF) + '.' + (ipNum >> 8 & 0xFF) + '.' + (ipNum & 0xFF);"
+    },
+    {
+      "file": "SystemFeature/TV/TVSettings/product/tv/src/main/ets/pages/network/IpUpdate.ets",
+      "category": "large_component_glr",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "SystemFeature/TV/TVSettings/product/tv/src/main/ets/pages/network/NetMonitor.ets",
+      "category": "large_component_glr",
+      "errorCount": 9,
+      "firstErrorLine": 324,
+      "firstErrorSnippet": "      throw new Error('checkResourceAccess error.');\r"
+    },
+    {
+      "file": "SystemFeature/TV/TVSettings/product/tv/src/ohosTest/ets/test/DefaultLayoutCore.test.ets",
+      "category": "callback_closure",
+      "errorCount": 16,
+      "firstErrorLine": 26,
+      "firstErrorSnippet": "interface EntryRouteMap {"
+    },
+    {
+      "file": "UI/ArkTsComponentCollection/ComponentCollection/entry/src/main/ets/pages/globalMethods/dialogs/bindSheetSample/BindSheetSample.ets",
+      "category": "large_component_glr",
+      "errorCount": 2,
+      "firstErrorLine": 49,
+      "firstErrorSnippet": "  @State detents: [(SheetSize | Length), (SheetSize | Length)?, (SheetSize | Length)?] = [SheetSize.MEDIUM, SIZE];"
+    },
+    {
+      "file": "UI/ArkTsComponentCollection/ComponentCollection/entry/src/main/ets/pages/universal/properties/attributeModifierSample/AttributeModifierSample.ets",
+      "category": "large_component_glr",
+      "errorCount": 3,
+      "firstErrorLine": 379,
+      "firstErrorSnippet": "                      this.textModifier.updateConstructorParams(\"Initialize\");"
+    }
+  ],
+  "categories": {
+    "large_component_glr": 15,
+    "callback_closure": 4,
+    "type_assertion": 5,
+    "import_syntax": 0,
+    "other": 36
+  }
+}
