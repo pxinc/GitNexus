@@ -1,7 +1,7 @@
 {
   "total": 13347,
-  "success": 13287,
-  "error": 60,
+  "success": 13290,
+  "error": 57,
   "crash": 0,
   "errorFiles": [
     {
@@ -90,28 +90,28 @@
     {
       "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Account.ets",
       "category": "type_assertion",
-      "errorCount": 16,
+      "errorCount": 12,
       "firstErrorLine": 22,
       "firstErrorSnippet": "  @State email: string = <string> router.getParams()['email']"
     },
     {
       "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Login.ets",
       "category": "type_assertion",
-      "errorCount": 4,
+      "errorCount": 3,
       "firstErrorLine": 22,
       "firstErrorSnippet": "  @State bundleName: string = <string> router.getParams()[\"bundleName\"]"
     },
     {
       "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Modify.ets",
       "category": "type_assertion",
-      "errorCount": 16,
+      "errorCount": 12,
       "firstErrorLine": 22,
       "firstErrorSnippet": "  @State username: string = <string> router.getParams()[\"username\"];"
     },
     {
       "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Register.ets",
       "category": "type_assertion",
-      "errorCount": 4,
+      "errorCount": 3,
       "firstErrorLine": 22,
       "firstErrorSnippet": "  @State bundleName: string = <string> router.getParams()['bundleName']"
     },
@@ -125,7 +125,7 @@
     {
       "file": "BasicFeature/Telephony/Contact/entry/src/main/ets/pages/NameCard.ets",
       "category": "other",
-      "errorCount": 6,
+      "errorCount": 5,
       "firstErrorLine": 22,
       "firstErrorSnippet": "  private contact = <contact.Contact> router.getParams()['data']"
     },
@@ -172,13 +172,6 @@
       "firstErrorSnippet": "  case label1: // 如果label1匹配，则执行"
     },
     {
-      "file": "DocsSample/ArkTS/Start/LearningArkTS/IntroductionToArkTS/entry/src/main/ets/pages/NameAnno.d.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 23,
-      "firstErrorSnippet": "export declare class MyClass {"
-    },
-    {
       "file": "DocsSample/ArkTS/Start/LearningArkTS/MigrationFromOtherLanguagesToArkTS/MigratingFromSwiftToArkTS/entry/src/main/ets/pages/Index.ets",
       "category": "large_component_glr",
       "errorCount": 5,
@@ -197,13 +190,6 @@
       "errorCount": 1,
       "firstErrorLine": 27,
       "firstErrorSnippet": "  public text: 'hello',"
-    },
-    {
-      "file": "DocsSample/ArkTS/Start/LearningArkTS/MigrationFromTypeScriptToArkTS/TsToArkTSRules/entry/src/main/ets/ArkTSLimitations/NoCommaOutsideloops.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 15,
-      "firstErrorSnippet": "for (let i = 0, j = 0; i < 10; ++i, j += 2) {"
     },
     {
       "file": "DocsSample/ArkUISample/Animation/entry/src/main/ets/pages/compTransition/template4/Index.ets",
@@ -290,9 +276,9 @@
     {
       "file": "DocsSample/Media/Audio/Midi/entry/src/main/ets/pages/Index.ets",
       "category": "large_component_glr",
-      "errorCount": 71,
-      "firstErrorLine": 127,
-      "firstErrorSnippet": "function getFontSize(config: FontSizesConfig, category: keyof FontSizesConfig, breakpoint: BreakpointType): number {"
+      "errorCount": 2,
+      "firstErrorLine": 2182,
+      "firstErrorSnippet": "    .height('100%')"
     },
     {
       "file": "DocsSample/Test/jsunit/entry/src/ohosTest/ets/test/mock/AfterReturn.test.ets",
@@ -406,13 +392,6 @@
       "firstErrorSnippet": "interface EntryRouteMap {"
     },
     {
-      "file": "UI/ArkTsComponentCollection/ComponentCollection/entry/src/main/ets/pages/globalMethods/dialogs/bindSheetSample/BindSheetSample.ets",
-      "category": "large_component_glr",
-      "errorCount": 2,
-      "firstErrorLine": 49,
-      "firstErrorSnippet": "  @State detents: [(SheetSize | Length), (SheetSize | Length)?, (SheetSize | Length)?] = [SheetSize.MEDIUM, SIZE];"
-    },
-    {
       "file": "UI/ArkTsComponentCollection/ComponentCollection/entry/src/main/ets/pages/universal/properties/attributeModifierSample/AttributeModifierSample.ets",
       "category": "large_component_glr",
       "errorCount": 3,
@@ -421,10 +400,10 @@
     }
   ],
   "categories": {
-    "large_component_glr": 15,
+    "large_component_glr": 14,
     "callback_closure": 4,
     "type_assertion": 5,
     "import_syntax": 0,
-    "other": 36
+    "other": 34
   }
 }
