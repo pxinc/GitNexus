@@ -1,7 +1,7 @@
 {
   "total": 11445,
-  "success": 11390,
-  "error": 55,
+  "success": 11391,
+  "error": 54,
   "crash": 0,
   "errorFiles": [
     {
@@ -249,13 +249,6 @@
       "firstErrorSnippet": "export class NovelGlobalFv {"
     },
     {
-      "file": "@passport+userrelationship@pncas+lmzbcdwbah3ydigfwe0bgn+8cfv50hn9xvmeu=/oh_modules/@passport/userrelationship/src/main/ets/platform/BackgroundTaskManager.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 5,
-      "firstErrorSnippet": "  export function reportTimeToServerInternal(seconds: number, businessTypeList: string[]) {"
-    },
-    {
       "file": "@payment+paymentkit@k+fhnbqt71wsslgzvqfxr0lqwvye64knt+yfz4eufrc=/oh_modules/@payment/paymentkit/src/main/ets/set_password/components/private/SetPasswordSwiper.ets",
       "category": "large_component_glr",
       "errorCount": 0,
@@ -384,6 +377,6 @@
     "callback_closure": 6,
     "type_assertion": 0,
     "import_syntax": 1,
-    "other": 29
+    "other": 28
   }
 }
