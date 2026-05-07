@@ -1,409 +1,389 @@
 {
-  "total": 13347,
-  "success": 13290,
-  "error": 57,
+  "total": 11445,
+  "success": 11390,
+  "error": 55,
   "crash": 0,
   "errorFiles": [
     {
-      "file": "ArkTS-Sta/TabsSample/entry/src/main/ets/entryability/EntryAbility.ets",
-      "category": "other",
-      "errorCount": 0,
-      "firstErrorSnippet": null
-    },
-    {
-      "file": "BasicFeature/Connectivity/MultipleFilesDownload/entry/src/ohosTest/ets/test/Ability.test.ets",
+      "file": "@dp+picasso@suivgtjbljl7vj90kpcy65famosz4gp3ooic2zgajg8=/oh_modules/@dp/picasso/src/main/ets/view/InputView.ets",
       "category": "other",
       "errorCount": 4,
-      "firstErrorLine": 325,
-      "firstErrorSnippet": "      let fileFive = await driver.findComponent(ON.id('banner_movie4.pngstate'));"
+      "firstErrorLine": 172,
+      "firstErrorSnippet": "        .inputFilter(ParseUtils.parseInputType(this.viewModel.inputType) === InputType.Number ? '[0123456789 ]' : '', th"
     },
     {
-      "file": "BasicFeature/DFX/Logger/log/src/main/ets/components/mainpage/Configure.ets",
-      "category": "other",
-      "errorCount": 5,
-      "firstErrorLine": 17,
-      "firstErrorSnippet": "export class Configure {"
-    },
-    {
-      "file": "BasicFeature/DataManagement/Preferences/entry/src/main/ets/common/ThemeDesktop.ets",
-      "category": "other",
-      "errorCount": 4,
-      "firstErrorLine": 19,
-      "firstErrorSnippet": "  @Link themeDatas: Array<{"
-    },
-    {
-      "file": "BasicFeature/DataManagement/Preferences/entry/src/main/ets/pages/Index.ets",
-      "category": "type_assertion",
-      "errorCount": 4,
-      "firstErrorLine": 57,
-      "firstErrorSnippet": "@Entry"
-    },
-    {
-      "file": "BasicFeature/DeviceManagement/Location/position/src/main/ets/components/pages/Location.ets",
+      "file": "@dp+picasso@suivgtjbljl7vj90kpcy65famosz4gp3ooic2zgajg8=/oh_modules/@dp/picasso/src/main/ets/view/list/ListView.ets",
       "category": "large_component_glr",
-      "errorCount": 2,
-      "firstErrorLine": 179,
-      "firstErrorSnippet": "                        Text(`${item.name === undefined ? item : item.name}`)"
-    },
-    {
-      "file": "BasicFeature/Graphics/Graphics3d/entry/src/ohosTest/ets/test/Ability.test.ets",
-      "category": "callback_closure",
-      "errorCount": 1,
-      "firstErrorLine": 25,
-      "firstErrorSnippet": "export default function abilityTest() {"
-    },
-    {
-      "file": "BasicFeature/Media/Audio/entry/src/ohosTest/ets/test/Ability.test.ets",
-      "category": "other",
-      "errorCount": 3,
-      "firstErrorLine": 1184,
-      "firstErrorSnippet": "      Logger.info(TAG, 'KaraokePage_Disable_004 end');"
-    },
-    {
-      "file": "BasicFeature/Media/VideoPlay/entry/src/main/ets/pages/ThumbnailGet.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  @State pixelMap: PixelMap|undefined[] = [undefined, undefined, undefined, undefined, undefined]"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/common/BundleInfo.ets",
-      "category": "other",
-      "errorCount": 10,
-      "firstErrorLine": 73,
-      "firstErrorSnippet": "  private dataArray: Array<{"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/common/ModifyInfo.ets",
-      "category": "large_component_glr",
-      "errorCount": 25,
-      "firstErrorLine": 77,
-      "firstErrorSnippet": "class MyDataSource extends BasicDataSource {"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/common/RegisterInfo.ets",
-      "category": "large_component_glr",
-      "errorCount": 24,
-      "firstErrorLine": 75,
-      "firstErrorSnippet": "class MyDataSource extends BasicDataSource {"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Account.ets",
-      "category": "type_assertion",
       "errorCount": 12,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  @State email: string = <string> router.getParams()['email']"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Login.ets",
-      "category": "type_assertion",
-      "errorCount": 3,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  @State bundleName: string = <string> router.getParams()[\"bundleName\"]"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Modify.ets",
-      "category": "type_assertion",
-      "errorCount": 12,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  @State username: string = <string> router.getParams()[\"username\"];"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Register.ets",
-      "category": "type_assertion",
-      "errorCount": 3,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  @State bundleName: string = <string> router.getParams()['bundleName']"
-    },
-    {
-      "file": "BasicFeature/Telephony/Contact/entry/src/main/ets/pages/EditContact.ets",
-      "category": "other",
-      "errorCount": 8,
-      "firstErrorLine": 32,
-      "firstErrorSnippet": "  @State contact: contact.Contact = <contact.Contact> router.getParams()['data']"
-    },
-    {
-      "file": "BasicFeature/Telephony/Contact/entry/src/main/ets/pages/NameCard.ets",
-      "category": "other",
-      "errorCount": 5,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  private contact = <contact.Contact> router.getParams()['data']"
-    },
-    {
-      "file": "BasicFeature/Telephony/MobileNetwork/entry/src/main/ets/common/NetWork.ets",
-      "category": "other",
-      "errorCount": 6,
-      "firstErrorLine": 34,
-      "firstErrorSnippet": "  @Builder dataState($$: {"
-    },
-    {
-      "file": "BasicFeature/Web/Browser/entry/src/main/ets/common/PhoneLayout.ets",
-      "category": "other",
-      "errorCount": 12,
-      "firstErrorLine": 24,
-      "firstErrorSnippet": "@Component"
-    },
-    {
-      "file": "BasicFeature/Web/Browser/entry/src/main/ets/common/TitleBar.ets",
-      "category": "large_component_glr",
-      "errorCount": 20,
-      "firstErrorLine": 28,
-      "firstErrorSnippet": "@Component"
-    },
-    {
-      "file": "DocsSample/ArkTS/ArkTsConcurrent/MultithreadedConcurrency/TaskPoolIntroduction/entry/src/main/ets/managers/returnpromise.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 120,
-      "firstErrorSnippet": "    .height('100%')\r"
-    },
-    {
-      "file": "DocsSample/ArkTS/Start/LearningArkTS/CodingStyleGuide/entry/src/main/ets/pages/Index.ets",
-      "category": "large_component_glr",
-      "errorCount": 3,
-      "firstErrorLine": 304,
-      "firstErrorSnippet": "  } else { // else 与其前面的大括号 } 之间增加空格"
-    },
-    {
-      "file": "DocsSample/ArkTS/Start/LearningArkTS/IntroductionToArkTS/entry/src/main/ets/pages/BasicKnowledge.ets",
-      "category": "large_component_glr",
-      "errorCount": 3,
-      "firstErrorLine": 266,
-      "firstErrorSnippet": "  case label1: // 如果label1匹配，则执行"
-    },
-    {
-      "file": "DocsSample/ArkTS/Start/LearningArkTS/MigrationFromOtherLanguagesToArkTS/MigratingFromSwiftToArkTS/entry/src/main/ets/pages/Index.ets",
-      "category": "large_component_glr",
-      "errorCount": 5,
-      "firstErrorLine": 424,
-      "firstErrorSnippet": "      .backgroundColor('#F1F3F5')"
-    },
-    {
-      "file": "DocsSample/ArkTS/Start/LearningArkTS/MigrationFromTypeScriptToArkTS/TsToArkTSRules/entry/src/main/ets/ArkTSLimitations/ExportMod.ets",
-      "category": "other",
-      "errorCount": 0,
-      "firstErrorSnippet": null
-    },
-    {
-      "file": "DocsSample/ArkTS/Start/LearningArkTS/MigrationFromTypeScriptToArkTS/TsToArkTSRules/entry/src/main/ets/ArkTSLimitations/NoAsConst.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 27,
-      "firstErrorSnippet": "  public text: 'hello',"
-    },
-    {
-      "file": "DocsSample/ArkUISample/Animation/entry/src/main/ets/pages/compTransition/template4/Index.ets",
-      "category": "other",
-      "errorCount": 4,
-      "firstErrorLine": 17,
-      "firstErrorSnippet": "@Entry"
-    },
-    {
-      "file": "DocsSample/ArkUISample/Animation/entry/src/main/ets/pages/compTransition/template6/Index.ets",
-      "category": "other",
-      "errorCount": 4,
-      "firstErrorLine": 16,
-      "firstErrorSnippet": "@Entry"
-    },
-    {
-      "file": "DocsSample/ArkUISample/ComponentSnapshot/entry/src/main/ets/common/ImageUtils.ets",
-      "category": "other",
-      "errorCount": 4,
-      "firstErrorLine": 42,
-      "firstErrorSnippet": "    // Except for the first screenshot, you don't need to crop it, and you need to crop the new parts"
-    },
-    {
-      "file": "DocsSample/ArkUISample/PersistenceV2/entry/src/main/ets/pages/TopLevelArrayClassA.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 33,
-      "firstErrorSnippet": "    type: Array<ClassA>,\r"
-    },
-    {
-      "file": "DocsSample/ArkUISample/PersistenceV2/entry/src/main/ets/pages/TopLevelArrayClassAAPIs.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 29,
-      "firstErrorSnippet": "    type: Array<ClassA>,\r"
-    },
-    {
-      "file": "DocsSample/ArkUISample/PersistenceV2/entry/src/main/ets/pages/TopLevelCollectionsArray.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 25,
-      "firstErrorSnippet": "    type: collections.Array<number>,\r"
-    },
-    {
-      "file": "DocsSample/ArkUISample/RenderingControl/entry/src/main/ets/pages/RenderingForeach/ArticleListView2.ets",
-      "category": "other",
-      "errorCount": 4,
-      "firstErrorLine": 62,
-      "firstErrorSnippet": "@Component"
-    },
-    {
-      "file": "DocsSample/ArkUISample/RenderingControl/entry/src/main/ets/pages/RenderingForeach/ArticleListView3.ets",
-      "category": "other",
-      "errorCount": 4,
       "firstErrorLine": 80,
       "firstErrorSnippet": "@Component"
     },
     {
-      "file": "DocsSample/ArkUISample/TextComponent/entry/src/main/ets/pages/richEditor/AddEvent.ets",
+      "file": "@hotel+platform@au+tzl1vvqeaqympnv48s+t7ydfpy+mowvqhnbdhu5s=/oh_modules/@hotel/platform/src/main/ets/hotelchannel/HotelChannelConstants.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 7,
+      "firstErrorSnippet": "  public static readonly MRN_PROTOCOL_HEADER: string = HotelChannelConstants.IS_MT ? MT_MRN : DP_MRN"
+    },
+    {
+      "file": "@mach+core@gdl2nvebreuhoyuz5hyb35l0hec5epqohijymyhdwko=/oh_modules/@mach/core/src/main/ets/Mach1/Component/MachVirtualNodeAttribute.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 160,
+      "firstErrorSnippet": "    return 'boolean';"
+    },
+    {
+      "file": "@map+mtmap@mkt1auxugrkfk9bhb+ttalnbx39ly11zzetze0k9p64=/oh_modules/@map/mtmap/src/main/ets/mtmapsdk/model/WeightedLatLng.ets",
+      "category": "other",
+      "errorCount": 6,
+      "firstErrorLine": 5,
+      "firstErrorSnippet": "export class WeightedLatLng {"
+    },
+    {
+      "file": "@map+mtmap@mkt1auxugrkfk9bhb+ttalnbx39ly11zzetze0k9p64=/oh_modules/@map/mtmap/src/main/ets/mtmapsdk/overlay/Arc/ArcOptions.ets",
+      "category": "other",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "@meituan+card_subscribe@cwvolensecr+w3bepsjzpqnxrfghvatp18vkypvdpzm=/oh_modules/@meituan/card_subscribe/src/main/ets/subscribeForm/Request.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 56,
+      "firstErrorSnippet": "const url: string = BuildProfile.MTDEV ? onlineUrl : onlineUrl;"
+    },
+    {
+      "file": "@meituan+gameVideo@meycwj0mvawykeeimldvtbeq6a+l6ukz6z4g9jcpst8=/oh_modules/@meituan/gameVideo/src/main/ets/pages/VideoSetView.ets",
+      "category": "large_component_glr",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "@meituan+homepage@tsjaw15cjw9ei6u4knfqzrsfyizyzcmhgn7mirw7mpq=/oh_modules/@meituan/homepage/src/main/ets/pages/home/components/LicenseAndRulesWidget.ets",
+      "category": "large_component_glr",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "@meituan+homepage@tsjaw15cjw9ei6u4knfqzrsfyizyzcmhgn7mirw7mpq=/oh_modules/@meituan/homepage/src/main/ets/pages/home/components/membershipUpgradePopUp/MembershipUpgradePopUp.ets",
+      "category": "large_component_glr",
+      "errorCount": 2,
+      "firstErrorLine": 607,
+      "firstErrorSnippet": "      const fontRegex = /<font\\s+color=([\"'])(#[a-zA-Z0-9]+)\\1[^>]*>([^<]*)<\\/font>/g"
+    },
+    {
+      "file": "@meituan+mscdebug@1ufeaap3zmwzv4kpak4cgt8kxczwov3ihlvm4chqdto=/oh_modules/@meituan/mscdebug/src/main/ets/redbox/RedBoxManager.ets",
+      "category": "other",
+      "errorCount": 4,
+      "firstErrorLine": 84,
+      "firstErrorSnippet": "  private stackParser(message: string, details?: string, stack?: Array<ESObject>, rawStack?: string, exceptionId?: numbe"
+    },
+    {
+      "file": "@meituan+mtgb@vtcqpat1avvcyehrkgawbkasqexadtavqxfd7uspt5s=/oh_modules/@meituan/mtgb/src/main/ets/msi/api/measure/MTGSearchMeasureTextProviders.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 459,
+      "firstErrorSnippet": "  private processHtmlTag(tag: string, styleStack: TextStyleInfo[]): void {"
+    },
+    {
+      "file": "@meituan+privacy_impl@bdoyyjppedckt19q23xrb8gqtj+hr+gjgcpovwk1c90=/oh_modules/@meituan/privacy_impl/src/main/ets/managers/MtAudioCapturer.ets",
+      "category": "other",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "@meituan+pt_nfc@2qcswzxkkquqqamu82pibfajqnx7puvib9orjbpncnw=/oh_modules/@meituan/pt_nfc/src/main/ets/router_handler/Handlers.ets",
+      "category": "other",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "@meituan+share_test@ogsodsatwafhonxdkvh8dq+oz+oh5y3u4ttcraidjnq=/oh_modules/@meituan/share_test/src/main/ets/test/CustomDataDialog.ets",
+      "category": "large_component_glr",
+      "errorCount": 142,
+      "firstErrorLine": 454,
+      "firstErrorSnippet": "      // 移除末尾多余的逗号和花括号 (如 },})"
+    },
+    {
+      "file": "@mgc+mgc@w+edr6ctcspp+eiz5pzfay79mex+ul4msyc+gsrvgnm=/oh_modules/@mgc/mgc/src/main/ets/utils/MGCNetConnectionUtil.ets",
+      "category": "callback_closure",
+      "errorCount": 3,
+      "firstErrorLine": 78,
+      "firstErrorSnippet": "        console.info('Succeeded to get data: ' + JSON.stringify(data));"
+    },
+    {
+      "file": "@mlive+livecard@wykt3ubxxoq+ltccc4ojeqzefzwjg8fkae+p13qiuj8=/oh_modules/@mlive/livecard/src/main/ets/components/MLiveCard/controllers/MLiveCardController.ets",
+      "category": "callback_closure",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "@mrn+react-native-openharmony-newarch@jtbk8orv9lohva3ujvrhwgr8xdngs3f6iwult++0wos=/oh_modules/@mrn/react-native-openharmony-newarch/src/main/ets/RNOHCorePackage/components/RNViewBase/RNViewBase.ets",
       "category": "large_component_glr",
       "errorCount": 4,
-      "firstErrorLine": 105,
+      "firstErrorLine": 216,
+      "firstErrorSnippet": "       * Focus hack: container components cannot be focused if they don't contain focusable children."
+    },
+    {
+      "file": "@mrn+react-native-openharmony-newarch@jtbk8orv9lohva3ujvrhwgr8xdngs3f6iwult++0wos=/oh_modules/@mrn/react-native-openharmony-newarch/src/main/ets/RNOHCorePackage/turboModules/AppearanceTurboModule.ets",
+      "category": "other",
+      "errorCount": 3,
+      "firstErrorLine": 121,
+      "firstErrorSnippet": "      applicationContext.off('environment', this.envCallbackID);"
+    },
+    {
+      "file": "@mrn+react-native-openharmony-newarch@jtbk8orv9lohva3ujvrhwgr8xdngs3f6iwult++0wos=/oh_modules/@mrn/react-native-openharmony-newarch/src/main/ets/RNSurface.ets",
+      "category": "large_component_glr",
+      "errorCount": 1,
+      "firstErrorLine": 115,
       "firstErrorSnippet": "@Component"
     },
     {
-      "file": "DocsSample/BackGroundTasksKit/ContinuousTask/entry/src/main/ets/MainAbility/BgTaskAbility.ets",
+      "file": "@mrn+react-native-openharmony@1rvgabf6brkyfgraorytqtqku8lqtwiffpffddl5pka=/oh_modules/@mrn/react-native-openharmony/src/main/ets/RNOHCorePackage/components/RNModalHostView.ets",
+      "category": "other",
+      "errorCount": 1,
+      "firstErrorLine": 108,
+      "firstErrorSnippet": "    return animationType === 'slide' || animationType === 'fade';"
+    },
+    {
+      "file": "@mrn+react-native-openharmony@1rvgabf6brkyfgraorytqtqku8lqtwiffpffddl5pka=/oh_modules/@mrn/react-native-openharmony/src/main/ets/RNOHCorePackage/components/RNPullToRefreshView.ets",
+      "category": "other",
+      "errorCount": 5,
+      "firstErrorLine": 36,
+      "firstErrorSnippet": "@Component"
+    },
+    {
+      "file": "@mrn+react-native-openharmony@1rvgabf6brkyfgraorytqtqku8lqtwiffpffddl5pka=/oh_modules/@mrn/react-native-openharmony/src/main/ets/RNOHCorePackage/components/RNScrollView/RNScrollView.ets",
+      "category": "large_component_glr",
+      "errorCount": 1,
+      "firstErrorLine": 58,
+      "firstErrorSnippet": "@Component"
+    },
+    {
+      "file": "@mrn+react-native-openharmony@1rvgabf6brkyfgraorytqtqku8lqtwiffpffddl5pka=/oh_modules/@mrn/react-native-openharmony/src/main/ets/RNOHCorePackage/components/RNText/RNParagraphExperimental.ets",
+      "category": "other",
+      "errorCount": 4,
+      "firstErrorLine": 110,
+      "firstErrorSnippet": "        })"
+    },
+    {
+      "file": "@mrn+react-native-openharmony@1rvgabf6brkyfgraorytqtqku8lqtwiffpffddl5pka=/oh_modules/@mrn/react-native-openharmony/src/main/ets/RNOHCorePackage/components/RNView.ets",
       "category": "other",
       "errorCount": 0,
       "firstErrorSnippet": null
     },
     {
-      "file": "DocsSample/BackGroundTasksKit/ContinuousTask/entry/src/main/ets/pages/audioPlayback/AudioPlaybackIndex.ets",
-      "category": "large_component_glr",
-      "errorCount": 0,
-      "firstErrorSnippet": null
-    },
-    {
-      "file": "DocsSample/BundleManagerDocsSample/HspSample/library/src/main/ets/pages/Back.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 66,
-      "firstErrorSnippet": "              url: '@bundle:com.samples.hspsample/library/ets/pages/Menu' //路径为：`library/src/main/ets/pages/Menu.ets\r"
-    },
-    {
-      "file": "DocsSample/Media/Audio/Midi/entry/src/main/ets/pages/Index.ets",
-      "category": "large_component_glr",
-      "errorCount": 2,
-      "firstErrorLine": 2182,
-      "firstErrorSnippet": "    .height('100%')"
-    },
-    {
-      "file": "DocsSample/Test/jsunit/entry/src/ohosTest/ets/test/mock/AfterReturn.test.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 41,
-      "firstErrorSnippet": "      expect(claser.method_1('testB')).assertUndefined(); // 断言执行通过"
-    },
-    {
-      "file": "Project/ApplicationHap/MultiHap/entry/src/ohosTest/ets/test/Ability.test.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 164,
-      "firstErrorSnippet": "     * input：\"1、播点击播放按钮"
-    },
-    {
-      "file": "Solutions/Game/Game2048/entry/src/main/ets/model/GameRule.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 165,
-      "firstErrorSnippet": "  dataChange(a: number, b: number, next: number, direction: string): {"
-    },
-    {
-      "file": "Solutions/Game/Lottie/entry/src/ohosTest/ets/test/Ability.test.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 166,
-      "firstErrorSnippet": "      Logger.info(TAG, `${BUNDLE}DestroyAnimationFunction_001 end`);"
-    },
-    {
-      "file": "Solutions/Shopping/OrangeShopping/feature/detailPageHsp/src/main/ets/components/Location.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 138,
-      "firstErrorSnippet": "                      Text(`${(item as CityType).name === undefined ? item : (item as CityType).name}`)"
-    },
-    {
-      "file": "SystemFeature/AutoFill/AutoFillScenarioization/entry/src/main/ets/autofillpages/SelectorList.ets",
-      "category": "other",
-      "errorCount": 6,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "let type: number | undefined = storage.get<number>('autoFillType');\r"
-    },
-    {
-      "file": "SystemFeature/DeviceManagement/DeviceManagementCollection/feature/capabilities/src/main/ets/util/BatteryInfoUtil.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 334,
-      "firstErrorSnippet": "    }).catch((err: BusinessError) => {"
-    },
-    {
-      "file": "SystemFeature/FileManagement/Photos/entry/src/main/ets/components/AlbumGridItemNewStyle.ets",
+      "file": "@mrn+react-native-openharmony@1rvgabf6brkyfgraorytqtqku8lqtwiffpffddl5pka=/oh_modules/@mrn/react-native-openharmony/src/main/ets/RNOHCorePackage/components/RNViewBase/RNViewBase.ets",
       "category": "large_component_glr",
       "errorCount": 4,
-      "firstErrorLine": 294,
-      "firstErrorSnippet": "          uri: 'pages/PhotoGridPage',"
+      "firstErrorLine": 232,
+      "firstErrorSnippet": "       * Focus hack: container components cannot be focused if they don't contain focusable children."
     },
     {
-      "file": "SystemFeature/ResourceAllocation/ApplicationThemeSwitch/entry/src/main/ets/pages/Index.ets",
+      "file": "@mrn+react-native-openharmony@1rvgabf6brkyfgraorytqtqku8lqtwiffpffddl5pka=/oh_modules/@mrn/react-native-openharmony/src/main/ets/RNOHCorePackage/turboModules/AppearanceTurboModule.ets",
       "category": "other",
-      "errorCount": 11,
-      "firstErrorLine": 51,
-      "firstErrorSnippet": "  @StorageLink('shoppingCartGoodsList') shoppingCartGoodsList: { data: { id: number } }[] = []"
+      "errorCount": 4,
+      "firstErrorLine": 66,
+      "firstErrorSnippet": "  setup(): void {"
     },
     {
-      "file": "SystemFeature/TV/TVPhotos/smbProtocol/src/main/ets/smb/Header.ets",
-      "category": "other",
+      "file": "@mrn+react-native-openharmony@1rvgabf6brkyfgraorytqtqku8lqtwiffpffddl5pka=/oh_modules/@mrn/react-native-openharmony/src/main/ets/RNSurface.ets",
+      "category": "large_component_glr",
       "errorCount": 1,
-      "firstErrorLine": 60,
-      "firstErrorSnippet": "};"
+      "firstErrorLine": 78,
+      "firstErrorSnippet": "@Component"
     },
     {
-      "file": "SystemFeature/TV/TVSettings/product/tv/src/main/ets/MainAbility/MainAbility.ets",
+      "file": "@msi+api@mu84ewo3mkkoud9uelvjgwskgdpmbsnilzzdipujxkq=/oh_modules/@msi/api/src/main/ets/network_network/download/DownloadApi.ets",
       "category": "callback_closure",
-      "errorCount": 16,
-      "firstErrorLine": 157,
-      "firstErrorSnippet": "  const matches = wantString.match(/\"ohos\\.aafwk\\.param\\.callerBundleName\"\\s*:\\s*\"([^\"]*)\"/);\r"
+      "errorCount": 9,
+      "firstErrorLine": 606,
+      "firstErrorSnippet": "  parseBase64Image = async ("
     },
     {
-      "file": "SystemFeature/TV/TVSettings/product/tv/src/main/ets/model/aboutDeviceImpl/AboutDeviceModel.ets",
+      "file": "@msi+api@mu84ewo3mkkoud9uelvjgwskgdpmbsnilzzdipujxkq=/oh_modules/@msi/api/src/main/ets/network_network/download/mime/src/Mime.ets",
       "category": "other",
       "errorCount": 2,
-      "firstErrorLine": 182,
-      "firstErrorSnippet": "      let wifiMacadress = JSON.stringify(wifiMac).replace(/\"/g, '')"
+      "firstErrorLine": 83,
+      "firstErrorSnippet": "    // Remove chars preceeding `/` or `\\`"
     },
     {
-      "file": "SystemFeature/TV/TVSettings/product/tv/src/main/ets/model/wifiImpl/WifiModel.ets",
-      "category": "callback_closure",
-      "errorCount": 2,
-      "firstErrorLine": 899,
-      "firstErrorSnippet": "    return (ipNum >>> 24) + '.' + (ipNum >> 16 & 0xFF) + '.' + (ipNum >> 8 & 0xFF) + '.' + (ipNum & 0xFF);"
+      "file": "@msi+api@mu84ewo3mkkoud9uelvjgwskgdpmbsnilzzdipujxkq=/oh_modules/@msi/api/src/main/ets/userinfo_login_override/common/MSIUserCenter.ets",
+      "category": "other",
+      "errorCount": 3,
+      "firstErrorLine": 240,
+      "firstErrorSnippet": "  registerUserInfoListener = () => {"
     },
     {
-      "file": "SystemFeature/TV/TVSettings/product/tv/src/main/ets/pages/network/IpUpdate.ets",
+      "file": "@msi+camera@soueck9mcx1h+wunjcqdbbp5gm8zmdyftcyum5sduq0=/oh_modules/@msi/camera/src/main/ets/CameraUtil.ets",
+      "category": "other",
+      "errorCount": 8,
+      "firstErrorLine": 307,
+      "firstErrorSnippet": "  return pictureSizes;"
+    },
+    {
+      "file": "@my+myhomepage@plk76pc5+rpogrcs8sgwewo7x0arcxuy+vxokd7y1tg=/oh_modules/@my/myhomepage/src/main/ets/routerconfig/UniversalUrlMapper.ets",
+      "category": "other",
+      "errorCount": 3,
+      "firstErrorLine": 608,
+      "firstErrorSnippet": "        const route: NativeRoute = { path: '/pages/show/index/index', params: {} };"
+    },
+    {
+      "file": "@novel+channel@pe1qga98uwfvzs9d+cc6z+0ob1pbzbgft9cxhl0hbso=/oh_modules/@novel/channel/src/main/ets/components/reader/anim/CoverFlipPage.ets",
       "category": "large_component_glr",
       "errorCount": 0,
       "firstErrorSnippet": null
     },
     {
-      "file": "SystemFeature/TV/TVSettings/product/tv/src/main/ets/pages/network/NetMonitor.ets",
+      "file": "@novel+channel@pe1qga98uwfvzs9d+cc6z+0ob1pbzbgft9cxhl0hbso=/oh_modules/@novel/channel/src/main/ets/components/reader/anim/EmulationFlipPage.ets",
       "category": "large_component_glr",
-      "errorCount": 9,
-      "firstErrorLine": 324,
-      "firstErrorSnippet": "      throw new Error('checkResourceAccess error.');\r"
+      "errorCount": 1,
+      "firstErrorLine": 27,
+      "firstErrorSnippet": "@Component"
     },
     {
-      "file": "SystemFeature/TV/TVSettings/product/tv/src/ohosTest/ets/test/DefaultLayoutCore.test.ets",
+      "file": "@novel+channel@pe1qga98uwfvzs9d+cc6z+0ob1pbzbgft9cxhl0hbso=/oh_modules/@novel/channel/src/main/ets/globalfv/NovelGlobalFv.ets",
       "category": "callback_closure",
-      "errorCount": 16,
-      "firstErrorLine": 26,
-      "firstErrorSnippet": "interface EntryRouteMap {"
+      "errorCount": 1,
+      "firstErrorLine": 82,
+      "firstErrorSnippet": "export class NovelGlobalFv {"
     },
     {
-      "file": "UI/ArkTsComponentCollection/ComponentCollection/entry/src/main/ets/pages/universal/properties/attributeModifierSample/AttributeModifierSample.ets",
+      "file": "@passport+userrelationship@pncas+lmzbcdwbah3ydigfwe0bgn+8cfv50hn9xvmeu=/oh_modules/@passport/userrelationship/src/main/ets/platform/BackgroundTaskManager.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 5,
+      "firstErrorSnippet": "  export function reportTimeToServerInternal(seconds: number, businessTypeList: string[]) {"
+    },
+    {
+      "file": "@payment+paymentkit@k+fhnbqt71wsslgzvqfxr0lqwvye64knt+yfz4eufrc=/oh_modules/@payment/paymentkit/src/main/ets/set_password/components/private/SetPasswordSwiper.ets",
       "category": "large_component_glr",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "@payment+paymentkit@k+fhnbqt71wsslgzvqfxr0lqwvye64knt+yfz4eufrc=/oh_modules/@payment/paymentkit/src/main/ets/utils/PKObjectUtils.ets",
+      "category": "other",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "@payment+recce@hwdutxmpn+nka0cmcponcsry6xyn5ua7rpkc0zlaqim=/oh_modules/@payment/recce/src/main/ets/RecceOHCorePackage/RecceScrollView/RecceHorizontalScrollView.ets",
+      "category": "large_component_glr",
+      "errorCount": 2,
+      "firstErrorLine": 67,
+      "firstErrorSnippet": "      // the view was unmounted while scrolling - don't report the event in that case"
+    },
+    {
+      "file": "@payment+recce@hwdutxmpn+nka0cmcponcsry6xyn5ua7rpkc0zlaqim=/oh_modules/@payment/recce/src/main/ets/RecceOHCorePackage/RecceScrollView/RecceScrollView.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 58,
+      "firstErrorSnippet": "      // the view was unmounted while scrolling - don't report the event in that case"
+    },
+    {
+      "file": "@payment+recce@hwdutxmpn+nka0cmcponcsry6xyn5ua7rpkc0zlaqim=/oh_modules/@payment/recce/src/main/ets/RecceOHCorePackage/RecceTextInput/RecceTextInput.ets",
+      "category": "large_component_glr",
+      "errorCount": 1,
+      "firstErrorLine": 201,
+      "firstErrorSnippet": "             * We don't want default values set only on the native side, as they break the layout."
+    },
+    {
+      "file": "@payment+sakbus_core@svd7aexy9kc93ftx8sfgp2lhtuuvacxf1qhplm3jxs4=/oh_modules/@payment/sakbus_core/src/main/ets/DynamicComponentLoader.ets",
+      "category": "other",
+      "errorCount": 6,
+      "firstErrorLine": 16,
+      "firstErrorSnippet": "@Component"
+    },
+    {
+      "file": "@supermarket+channel@+9wptd30whzqdurn+jburq1frxrirz2g4oe6mwrp9u4=/oh_modules/@supermarket/channel/src/main/ets/p_search/route/SearchRouters.ets",
+      "category": "other",
+      "errorCount": 6,
+      "firstErrorLine": 12,
+      "firstErrorSnippet": "function createSchemeArray(suffixes: string[]): string[] {"
+    },
+    {
+      "file": "@supermarket+channel@+9wptd30whzqdurn+jburq1frxrirz2g4oe6mwrp9u4=/oh_modules/@supermarket/channel/src/main/ets/p_search/ui/result/HeightAndScrollData.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 77,
+      "firstErrorSnippet": "    // If there's no second search, sort & filter should not be scrolled."
+    },
+    {
+      "file": "@supermarket+channel@+9wptd30whzqdurn+jburq1frxrirz2g4oe6mwrp9u4=/oh_modules/@supermarket/channel/src/main/ets/p_search/ui/result/requester/Requester.ets",
+      "category": "other",
+      "errorCount": 2,
+      "firstErrorLine": 365,
+      "firstErrorSnippet": "    map.set(\"filter_type\", firstTransaction.request.sortFilter.filterRequestState.toActivityFilterCodes() ?? '-999')"
+    },
+    {
+      "file": "@waimai+im_push@zc0r7+tuu1mfjktkkmdhedgfhyqzidqaaqtpf7pcdde=/oh_modules/@waimai/im_push/src/main/ets/im/utils/IMUtils.ets",
+      "category": "other",
+      "errorCount": 7,
+      "firstErrorLine": 491,
+      "firstErrorSnippet": "    // `${scheme}?appId=ad421ffa038e4608&targetPath=${encodeURIComponent('/packages/im/pages/' +"
+    },
+    {
+      "file": "@waimai+imsdk@t8d1qpcl5bpmelrbrn8u0iohtrhjp9rvr1wdjyh17+o=/oh_modules/@waimai/imsdk/src/main/ets/im/utils/IMUtils.ets",
+      "category": "other",
+      "errorCount": 7,
+      "firstErrorLine": 562,
+      "firstErrorSnippet": "    // `${scheme}?appId=ad421ffa038e4608&targetPath=${encodeURIComponent('/packages/im/pages/' +"
+    },
+    {
+      "file": "@waimai+kingkongpage@skq5hbp2swi1ugflnflejmtuh+yopuamkjqujeawc0w=/oh_modules/@waimai/kingkongpage/src/main/ets/components/search/SearchBar.ets",
+      "category": "large_component_glr",
+      "errorCount": 1,
+      "firstErrorLine": 98,
+      "firstErrorSnippet": "    // const url = `/packages/search-business/search-guide/index?keyword=${this.rollKeyword?.view_keyword ??"
+    },
+    {
+      "file": "@waimai+kingkongpage@skq5hbp2swi1ugflnflejmtuh+yopuamkjqujeawc0w=/oh_modules/@waimai/kingkongpage/src/main/ets/pages/KingKongPage.ets",
+      "category": "large_component_glr",
+      "errorCount": 0,
+      "firstErrorSnippet": null
+    },
+    {
+      "file": "@waimai+order@r7bn99ez7eurltkf7d70ykqkz46lprg6xwetapw99mo=/oh_modules/@waimai/order/src/main/ets/orderStatus/components/orderStatusRemind/OrderStatusRemindView.ets",
+      "category": "import_syntax",
       "errorCount": 3,
-      "firstErrorLine": 379,
-      "firstErrorSnippet": "                      this.textModifier.updateConstructorParams(\"Initialize\");"
+      "firstErrorLine": 0,
+      "firstErrorSnippet": "import RichTextView from '../../../base/components/RichTextView/RichTextView';"
+    },
+    {
+      "file": "@waimai_ad+ad@sezxye+ld9e6l5wkoxz+6jpdzhtp6xo+9lj6ghmlypo=/oh_modules/@waimai_ad/ad/src/main/ets/business/WMPouchCommonElement.ets",
+      "category": "large_component_glr",
+      "errorCount": 8,
+      "firstErrorLine": 105,
+      "firstErrorSnippet": "  createPouchManager(params: Record<string, Object>, callback: NativeCallback): WMPouchManager {"
+    },
+    {
+      "file": "@waimai_ad+ad@sezxye+ld9e6l5wkoxz+6jpdzhtp6xo+9lj6ghmlypo=/oh_modules/@waimai_ad/ad/src/main/ets/business/aladdin/WMADSearchAladdinService.ets",
+      "category": "callback_closure",
+      "errorCount": 3,
+      "firstErrorLine": 59,
+      "firstErrorSnippet": "export class WMADSearchAladdinService {"
+    },
+    {
+      "file": "@waimai_ad+ad@sezxye+ld9e6l5wkoxz+6jpdzhtp6xo+9lj6ghmlypo=/oh_modules/@waimai_ad/ad/src/main/ets/business/platinum/homepage/PlatinumElement.ets",
+      "category": "large_component_glr",
+      "errorCount": 26,
+      "firstErrorLine": 39,
+      "firstErrorSnippet": "export default struct PlatinumComponent {"
+    },
+    {
+      "file": "@waimai_ad+ad@sezxye+ld9e6l5wkoxz+6jpdzhtp6xo+9lj6ghmlypo=/oh_modules/@waimai_ad/ad/src/main/ets/business/search/WMAdSearchListService.ets",
+      "category": "callback_closure",
+      "errorCount": 3,
+      "firstErrorLine": 35,
+      "firstErrorSnippet": "export class WMAdSearchListService {"
     }
   ],
   "categories": {
-    "large_component_glr": 14,
-    "callback_closure": 4,
-    "type_assertion": 5,
-    "import_syntax": 0,
-    "other": 34
+    "large_component_glr": 19,
+    "callback_closure": 6,
+    "type_assertion": 0,
+    "import_syntax": 1,
+    "other": 29
   }
 }
