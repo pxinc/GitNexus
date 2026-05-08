@@ -1,36 +1,15 @@
 {
   "total": 11445,
-  "success": 11438,
-  "error": 7,
+  "success": 11441,
+  "error": 4,
   "crash": 0,
   "errorFiles": [
-    {
-      "file": "@hotel+platform@au+tzl1vvqeaqympnv48s+t7ydfpy+mowvqhnbdhu5s=/oh_modules/@hotel/platform/src/main/ets/hotelchannel/HotelChannelConstants.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 7,
-      "firstErrorSnippet": "  public static readonly MRN_PROTOCOL_HEADER: string = HotelChannelConstants.IS_MT ? MT_MRN : DP_MRN"
-    },
-    {
-      "file": "@meituan+card_subscribe@cwvolensecr+w3bepsjzpqnxrfghvatp18vkypvdpzm=/oh_modules/@meituan/card_subscribe/src/main/ets/subscribeForm/Request.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 56,
-      "firstErrorSnippet": "const url: string = BuildProfile.MTDEV ? onlineUrl : onlineUrl;"
-    },
     {
       "file": "@meituan+homepage@tsjaw15cjw9ei6u4knfqzrsfyizyzcmhgn7mirw7mpq=/oh_modules/@meituan/homepage/src/main/ets/pages/home/components/kingKong/KingKong.ets",
       "category": "large_component_glr",
       "errorCount": 16,
       "firstErrorLine": 53,
       "firstErrorSnippet": "@Preview"
-    },
-    {
-      "file": "@meituan+mscdebug@1ufeaap3zmwzv4kpak4cgt8kxczwov3ihlvm4chqdto=/oh_modules/@meituan/mscdebug/src/main/ets/redbox/RedBoxManager.ets",
-      "category": "other",
-      "errorCount": 4,
-      "firstErrorLine": 84,
-      "firstErrorSnippet": "  private stackParser(message: string, details?: string, stack?: Array<ESObject>, rawStack?: string, exceptionId?: numbe"
     },
     {
       "file": "@waimai+homepage@epswlps5fev+u64qfvrfrrsmdl3bu1iqc5nhbrxuipa=/oh_modules/@waimai/homepage/src/main/ets/components/kingkong/KingKong.ets",
@@ -59,6 +38,6 @@
     "callback_closure": 0,
     "type_assertion": 0,
     "import_syntax": 1,
-    "other": 3
+    "other": 0
   }
 }
