@@ -15,6 +15,7 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { createRequire } from 'node:module';
+import { parseArktsWithFallback } from './arkts-parse-fallback.mjs';
 
 const _require = createRequire(import.meta.url);
 let Parser;
@@ -126,10 +127,17 @@ async function main() {
   console.log(`Found ${files.length} .ets files\n`);
 
   const results = {
+    samplesDir: SAMPLES_DIR,
     total: files.length,
     success: 0,
     error: 0,
     crash: 0,
+    rawSuccess: 0,
+    fallback: {
+      light: 0,
+      brace: 0,
+      opaque: 0,
+    },
     errorFiles: [],
     categories: {
       large_component_glr: 0,
@@ -157,25 +165,26 @@ async function main() {
       continue;
     }
 
-    let tree;
+    let parsed;
     try {
-      tree = parser.parse(source);
+      parsed = parseArktsWithFallback(parser, source);
     } catch (e) {
       results.crash++;
       results.errorFiles.push({ file: relPath, category: 'crash', error: e.message });
       continue;
     }
 
+    const { tree, content, stage } = parsed;
     const hasError = tree.rootNode.hasError;
     if (hasError) {
       results.error++;
-      const category = categorizeError(source, tree.rootNode);
+      const category = categorizeError(content, tree.rootNode);
       results.categories[category]++;
 
       const firstError = findFirstError(tree.rootNode);
       const errorCount = countErrors(tree.rootNode);
       const errorLine = firstError
-        ? source.split('\n')[firstError.startPosition.row]?.slice(0, 120)
+        ? content.split('\n')[firstError.startPosition.row]?.slice(0, 120)
         : null;
 
       const entry = {
@@ -189,6 +198,11 @@ async function main() {
       results.errorFiles.push(entry);
     } else {
       results.success++;
+      if (stage === 'raw') {
+        results.rawSuccess++;
+      } else {
+        results.fallback[stage]++;
+      }
     }
 
     if ((i + 1) % 1000 === 0) {
@@ -205,6 +219,10 @@ async function main() {
   console.log(`Success:  ${results.success} (${rate}%)`);
   console.log(`Errors:   ${results.error}`);
   console.log(`Crashes:  ${results.crash}`);
+  console.log(`Raw OK:   ${results.rawSuccess}`);
+  console.log(
+    `Fallback: light=${results.fallback.light}, brace=${results.fallback.brace}, opaque=${results.fallback.opaque}`,
+  );
   console.log(`\nError Categories:`);
   for (const [cat, count] of Object.entries(results.categories)) {
     console.log(`  ${cat}: ${count}`);

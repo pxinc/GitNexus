@@ -87,6 +87,7 @@ import {
 } from '../utils/method-props.js';
 import type { LanguageProvider } from '../language-provider.js';
 import { extractArktsUiChainMatches } from '../utils/arkts-ui-chain-extractor.js';
+import { parseArktsWithFallback } from '../utils/arkts-parse-fallback.js';
 import type { ParsedFile } from 'gitnexus-shared';
 import { extractParsedFile } from '../scope-extractor-bridge.js';
 
@@ -1419,9 +1420,14 @@ const processFileGroup = (
 
     let tree;
     try {
-      tree = parser.parse(parseContent, undefined, {
-        bufferSize: getTreeSitterBufferSize(parseContent),
-      });
+      const parseOptions = { bufferSize: getTreeSitterBufferSize(parseContent) };
+      if (language === SupportedLanguages.ArkTS) {
+        const parsed = parseArktsWithFallback(parser, parseContent, parseOptions);
+        tree = parsed.tree;
+        parseContent = parsed.content;
+      } else {
+        tree = parser.parse(parseContent, undefined, parseOptions);
+      }
     } catch (err) {
       console.warn(
         `Failed to parse file ${file.path}: ${err instanceof Error ? err.message : String(err)}`,

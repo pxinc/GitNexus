@@ -53,6 +53,7 @@ import {
   getTreeSitterContentByteLength,
   TREE_SITTER_MAX_BUFFER,
 } from './constants.js';
+import { parseArktsWithFallback } from './utils/arkts-parse-fallback.js';
 
 export type FileProgressCallback = (current: number, total: number, filePath: string) => void;
 
@@ -378,9 +379,14 @@ const processParsingSequential = async (
 
     let tree: Parser.Tree;
     try {
-      tree = parser.parse(parseContent, undefined, {
-        bufferSize: getTreeSitterBufferSize(parseContent),
-      });
+      const parseOptions = { bufferSize: getTreeSitterBufferSize(parseContent) };
+      if (language === SupportedLanguages.ArkTS) {
+        const parsed = parseArktsWithFallback(parser, parseContent, parseOptions);
+        tree = parsed.tree;
+        parseContent = parsed.content;
+      } else {
+        tree = parser.parse(parseContent, undefined, parseOptions);
+      }
     } catch (parseError) {
       console.warn(`Skipping unparseable file: ${file.path}`);
       continue;

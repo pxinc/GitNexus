@@ -1,204 +1,21 @@
 {
+  "samplesDir": "/Users/pengxingcheng/Dev/AIDev/applications_app_samples",
   "total": 13347,
-  "success": 13320,
-  "error": 27,
+  "success": 13347,
+  "error": 0,
   "crash": 0,
-  "errorFiles": [
-    {
-      "file": "BasicFeature/DFX/Logger/log/src/main/ets/components/mainpage/Configure.ets",
-      "category": "other",
-      "errorCount": 5,
-      "firstErrorLine": 17,
-      "firstErrorSnippet": "export class Configure {"
-    },
-    {
-      "file": "BasicFeature/DataManagement/Preferences/entry/src/main/ets/common/ThemeDesktop.ets",
-      "category": "other",
-      "errorCount": 4,
-      "firstErrorLine": 19,
-      "firstErrorSnippet": "  @Link themeDatas: Array<{"
-    },
-    {
-      "file": "BasicFeature/DataManagement/Preferences/entry/src/main/ets/pages/Index.ets",
-      "category": "type_assertion",
-      "errorCount": 4,
-      "firstErrorLine": 57,
-      "firstErrorSnippet": "@Entry"
-    },
-    {
-      "file": "BasicFeature/Media/VideoPlay/entry/src/main/ets/pages/ThumbnailGet.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  @State pixelMap: PixelMap|undefined[] = [undefined, undefined, undefined, undefined, undefined]"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/common/BundleInfo.ets",
-      "category": "other",
-      "errorCount": 10,
-      "firstErrorLine": 73,
-      "firstErrorSnippet": "  private dataArray: Array<{"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/common/ModifyInfo.ets",
-      "category": "large_component_glr",
-      "errorCount": 25,
-      "firstErrorLine": 77,
-      "firstErrorSnippet": "class MyDataSource extends BasicDataSource {"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/common/RegisterInfo.ets",
-      "category": "large_component_glr",
-      "errorCount": 24,
-      "firstErrorLine": 75,
-      "firstErrorSnippet": "class MyDataSource extends BasicDataSource {"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Account.ets",
-      "category": "type_assertion",
-      "errorCount": 12,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  @State email: string = <string> router.getParams()['email']"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Login.ets",
-      "category": "type_assertion",
-      "errorCount": 3,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  @State bundleName: string = <string> router.getParams()[\"bundleName\"]"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Modify.ets",
-      "category": "type_assertion",
-      "errorCount": 12,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  @State username: string = <string> router.getParams()[\"username\"];"
-    },
-    {
-      "file": "BasicFeature/Security/AppAccountManager/entry/src/main/ets/pages/Register.ets",
-      "category": "type_assertion",
-      "errorCount": 3,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  @State bundleName: string = <string> router.getParams()['bundleName']"
-    },
-    {
-      "file": "BasicFeature/Telephony/Contact/entry/src/main/ets/pages/EditContact.ets",
-      "category": "other",
-      "errorCount": 8,
-      "firstErrorLine": 32,
-      "firstErrorSnippet": "  @State contact: contact.Contact = <contact.Contact> router.getParams()['data']"
-    },
-    {
-      "file": "BasicFeature/Telephony/Contact/entry/src/main/ets/pages/NameCard.ets",
-      "category": "other",
-      "errorCount": 5,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "  private contact = <contact.Contact> router.getParams()['data']"
-    },
-    {
-      "file": "BasicFeature/Telephony/MobileNetwork/entry/src/main/ets/common/NetWork.ets",
-      "category": "other",
-      "errorCount": 6,
-      "firstErrorLine": 34,
-      "firstErrorSnippet": "  @Builder dataState($$: {"
-    },
-    {
-      "file": "BasicFeature/Web/Browser/entry/src/main/ets/common/PhoneLayout.ets",
-      "category": "other",
-      "errorCount": 10,
-      "firstErrorLine": 24,
-      "firstErrorSnippet": "@Component"
-    },
-    {
-      "file": "BasicFeature/Web/Browser/entry/src/main/ets/common/TitleBar.ets",
-      "category": "large_component_glr",
-      "errorCount": 20,
-      "firstErrorLine": 28,
-      "firstErrorSnippet": "@Component"
-    },
-    {
-      "file": "DocsSample/ArkTS/Start/LearningArkTS/CodingStyleGuide/entry/src/main/ets/pages/Index.ets",
-      "category": "large_component_glr",
-      "errorCount": 3,
-      "firstErrorLine": 488,
-      "firstErrorSnippet": "const num1 = .5;"
-    },
-    {
-      "file": "DocsSample/ArkTS/Start/LearningArkTS/MigrationFromTypeScriptToArkTS/TsToArkTSRules/entry/src/main/ets/ArkTSLimitations/NoAsConst.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 27,
-      "firstErrorSnippet": "  public text: 'hello',"
-    },
-    {
-      "file": "DocsSample/ArkUISample/Animation/entry/src/main/ets/pages/component/template3/Index.ets",
-      "category": "other",
-      "errorCount": 9,
-      "firstErrorLine": 72,
-      "firstErrorSnippet": "  getModify(item: T): ListItemModify {"
-    },
-    {
-      "file": "DocsSample/ArkUISample/PersistenceV2/entry/src/main/ets/pages/TopLevelArrayClassA.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 33,
-      "firstErrorSnippet": "    type: Array<ClassA>,\r"
-    },
-    {
-      "file": "DocsSample/ArkUISample/PersistenceV2/entry/src/main/ets/pages/TopLevelArrayClassAAPIs.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 29,
-      "firstErrorSnippet": "    type: Array<ClassA>,\r"
-    },
-    {
-      "file": "DocsSample/ArkUISample/PersistenceV2/entry/src/main/ets/pages/TopLevelCollectionsArray.ets",
-      "category": "other",
-      "errorCount": 1,
-      "firstErrorLine": 25,
-      "firstErrorSnippet": "    type: collections.Array<number>,\r"
-    },
-    {
-      "file": "Solutions/Game/Game2048/entry/src/main/ets/model/GameRule.ets",
-      "category": "other",
-      "errorCount": 2,
-      "firstErrorLine": 165,
-      "firstErrorSnippet": "  dataChange(a: number, b: number, next: number, direction: string): {"
-    },
-    {
-      "file": "SystemFeature/AutoFill/AutoFillScenarioization/entry/src/main/ets/autofillpages/SelectorList.ets",
-      "category": "other",
-      "errorCount": 6,
-      "firstErrorLine": 22,
-      "firstErrorSnippet": "let type: number | undefined = storage.get<number>('autoFillType');\r"
-    },
-    {
-      "file": "SystemFeature/ResourceAllocation/ApplicationThemeSwitch/entry/src/main/ets/pages/Index.ets",
-      "category": "other",
-      "errorCount": 9,
-      "firstErrorLine": 51,
-      "firstErrorSnippet": "  @StorageLink('shoppingCartGoodsList') shoppingCartGoodsList: { data: { id: number } }[] = []"
-    },
-    {
-      "file": "SystemFeature/TV/TVPhotos/smbProtocol/src/main/ets/smb/Header.ets",
-      "category": "other",
-      "errorCount": 3,
-      "firstErrorLine": 59,
-      "firstErrorSnippet": "  [key in HeaderName]?: StructureField;"
-    },
-    {
-      "file": "SystemFeature/TV/TVSettings/product/tv/src/ohosTest/ets/test/DefaultLayoutCore.test.ets",
-      "category": "callback_closure",
-      "errorCount": 16,
-      "firstErrorLine": 26,
-      "firstErrorSnippet": "interface EntryRouteMap {"
-    }
-  ],
+  "rawSuccess": 13320,
+  "fallback": {
+    "light": 5,
+    "brace": 21,
+    "opaque": 1
+  },
+  "errorFiles": [],
   "categories": {
-    "large_component_glr": 4,
-    "callback_closure": 1,
-    "type_assertion": 5,
+    "large_component_glr": 0,
+    "callback_closure": 0,
+    "type_assertion": 0,
     "import_syntax": 0,
-    "other": 17
+    "other": 0
   }
 }
