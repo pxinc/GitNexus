@@ -324,6 +324,7 @@ Search modes:
 - By module path (e.g., "@meituan/mrouter"): finds all files importing that module
 - By symbol name (e.g., "MRouter"): finds all files/classes using that symbol
 - By file path substring (e.g., "router/Index.ets"): finds dependencies of that file`,
+    annotations: READ_ONLY_TOOL_ANNOTATIONS,
     inputSchema: {
       type: 'object',
       properties: {
