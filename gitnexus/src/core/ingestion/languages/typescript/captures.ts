@@ -38,6 +38,7 @@ import { recordCacheHit, recordCacheMiss } from './cache-stats.js';
 import { synthesizeTsReceiverBinding } from './receiver-binding.js';
 import { computeTsArityMetadata } from './arity-metadata.js';
 import { getTreeSitterBufferSize } from '../../constants.js';
+import { parseSourceSafe } from '../../../tree-sitter/safe-parse.js';
 
 /** tree-sitter-typescript node types for function-like scopes that may
  *  carry a synthesized `this` binding. Kept in sync with the
@@ -84,6 +85,11 @@ function pickFirstDefined(grouped: CaptureMatch, tags: readonly string[]): Captu
  *      as `@reference.write.member`).
  *   4. The member_expression is the `function:` of an `await_expression`
  *      being called (handled by the member-call capture).
+ *   5. The member_expression is the `name:` of a `jsx_self_closing_element`
+ *      or `jsx_opening_element` (it's a JSX component invocation, already
+ *      captured as `@reference.call.member` by the TSX-only query suffix).
+ *      Without this filter, `<Foo.Bar />` would emit a phantom ACCESSES
+ *      edge to `Foo.Bar` IN ADDITION to the CALLS edge.
  *
  * Returns `true` when the capture should be kept as a read reference,
  * `false` when it should be dropped.
@@ -99,6 +105,9 @@ function shouldEmitReadMember(memberNode: SyntaxNode): boolean {
     case 'assignment_expression':
     case 'augmented_assignment_expression':
       return parent.childForFieldName('left')?.id !== memberNode.id;
+    case 'jsx_self_closing_element':
+    case 'jsx_opening_element':
+      return parent.childForFieldName('name')?.id !== memberNode.id;
     default:
       return true;
   }
@@ -126,7 +135,7 @@ export function emitTsScopeCaptures(
     tree = undefined;
   }
   if (tree === undefined) {
-    tree = getTsParser(filePath).parse(sourceText, undefined, {
+    tree = parseSourceSafe(getTsParser(filePath), sourceText, undefined, {
       bufferSize: getTreeSitterBufferSize(sourceText),
     });
     recordCacheMiss();
@@ -232,6 +241,20 @@ export function emitTsScopeCaptures(
     // arity filter can narrow overloads. Count the `argument` named
     // children of the backing `arguments` node. TypeScript constructor
     // calls use `new_expression`; regular calls use `call_expression`.
+    //
+    // JSX call anchors (`jsx_self_closing_element` / `jsx_opening_element`
+    // captured by the TSX-only suffix in `query.ts`) intentionally do
+    // NOT carry arity metadata. The lookup below would resolve `callNode`
+    // to `null` for a JSX anchor (the anchor is neither a call_expression
+    // nor a new_expression), so the synthesis branch silently no-ops and
+    // the JSX call enters the registry with name-only resolution. This
+    // is acceptable for React: components are virtually never
+    // overloaded in the current GitNexus graph model, so name-only
+    // dispatch matches the single component definition. If a future
+    // codebase introduces overloaded React components AND needs JSX
+    // calls to disambiguate by props-arity, a JSX-aware arity
+    // synthesizer would need to count `jsx_attribute` children of the
+    // opening tag instead of `arguments`.
     const callAnchor = pickFirstDefined(grouped, CALL_TAGS);
     if (callAnchor !== undefined && grouped['@reference.arity'] === undefined) {
       const callNode =

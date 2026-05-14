@@ -12,6 +12,7 @@ import { SupportedLanguages } from 'gitnexus-shared';
 import { createClassExtractor } from '../class-extractors/generic.js';
 import { cClassConfig, cppClassConfig } from '../class-extractors/configs/c-cpp.js';
 import { defineLanguage } from '../language-provider.js';
+import type { AstFrameworkPatternConfig } from '../language-provider.js';
 import { typeConfig as cCppConfig } from '../type-extractors/c-cpp.js';
 import { cCppExportChecker } from '../export-detection.js';
 import { createImportResolver } from '../import-resolvers/resolver-factory.js';
@@ -44,6 +45,25 @@ import { cVariableConfig, cppVariableConfig } from '../variable-extractors/confi
 import { createCallExtractor } from '../call-extractors/generic.js';
 import { cCallConfig, cppCallConfig } from '../call-extractors/configs/c-cpp.js';
 import { createHeritageExtractor } from '../heritage-extractors/generic.js';
+import { stripUeMacros } from '../cpp-ue-preprocessor.js';
+import {
+  emitCScopeCaptures,
+  interpretCImport,
+  interpretCTypeBinding,
+  cArityCompatibility,
+  cBindingScopeFor,
+  cImportOwningScope,
+  cReceiverBinding,
+} from './c/index.js';
+import {
+  emitCppScopeCaptures,
+  interpretCppImport,
+  interpretCppTypeBinding,
+  cppArityCompatibility,
+  cppBindingScopeFor,
+  cppImportOwningScope,
+  cppReceiverBinding,
+} from './cpp/index.js';
 
 const C_BUILT_INS: ReadonlySet<string> = new Set([
   'printf',
@@ -317,6 +337,38 @@ const cppLabelOverride: NonNullable<LanguageProvider['labelOverride']> = (
 export const cProvider = defineLanguage({
   id: SupportedLanguages.C,
   extensions: ['.c'],
+  entryPointPatterns: [
+    /^main$/,
+    /^init_/,
+    /_init$/,
+    /^start_/,
+    /_start$/,
+    /^run_/,
+    /_run$/,
+    /^stop_/,
+    /_stop$/,
+    /^open_/,
+    /_open$/,
+    /^close_/,
+    /_close$/,
+    /^create_/,
+    /_create$/,
+    /^destroy_/,
+    /_destroy$/,
+    /^handle_/,
+    /_handler$/,
+    /_callback$/,
+    /^cmd_/,
+    /^server_/,
+    /^client_/,
+    /^session_/,
+    /^window_/,
+    /^key_/,
+    /^input_/,
+    /^output_/,
+    /^notify_/,
+    /^control_/,
+  ],
   treeSitterQueries: C_QUERIES,
   typeConfig: cCppConfig,
   exportChecker: cCppExportChecker,
@@ -333,12 +385,61 @@ export const cProvider = defineLanguage({
   heritageExtractor: createHeritageExtractor(SupportedLanguages.C),
   labelOverride: cppLabelOverride,
   builtInNames: C_BUILT_INS,
+
+  // ── RFC #909 Ring 3: scope-based resolution hooks (RFC §5) ──────────
+  emitScopeCaptures: emitCScopeCaptures,
+  interpretImport: interpretCImport,
+  interpretTypeBinding: interpretCTypeBinding,
+  bindingScopeFor: cBindingScopeFor,
+  importOwningScope: cImportOwningScope,
+  receiverBinding: cReceiverBinding,
+  arityCompatibility: cArityCompatibility,
+  // mergeBindings + resolveImportTarget live on ScopeResolver (see c/scope-resolver.ts).
 });
 
 export const cppProvider = defineLanguage({
   id: SupportedLanguages.CPlusPlus,
   extensions: ['.cpp', '.cc', '.cxx', '.h', '.hpp', '.hxx', '.hh'],
+  entryPointPatterns: [
+    /^main$/,
+    /^init_/,
+    /_init$/,
+    /^Create[A-Z]/,
+    /^create_/,
+    /^Run$/,
+    /^run$/,
+    /^Start$/,
+    /^start$/,
+    /^handle_/,
+    /_handler$/,
+    /_callback$/,
+    /^OnEvent/,
+    /^on_/,
+    /::Run$/,
+    /::Start$/,
+    /::Init$/,
+    /::Execute$/,
+  ],
+  astFrameworkPatterns: [
+    {
+      framework: 'qt',
+      entryPointMultiplier: 2.8,
+      reason: 'qt-macro',
+      patterns: [
+        'Q_OBJECT',
+        'Q_INVOKABLE',
+        'Q_PROPERTY',
+        'Q_SIGNALS',
+        'Q_SLOTS',
+        'Q_SIGNAL',
+        'Q_SLOT',
+        'QWidget',
+        'QApplication',
+      ],
+    },
+  ] satisfies AstFrameworkPatternConfig[],
   treeSitterQueries: CPP_QUERIES,
+  preprocessSource: stripUeMacros,
   typeConfig: cCppConfig,
   exportChecker: cCppExportChecker,
   importResolver: createImportResolver(cppImportConfig),
@@ -355,4 +456,14 @@ export const cppProvider = defineLanguage({
   heritageExtractor: createHeritageExtractor(SupportedLanguages.CPlusPlus),
   labelOverride: cppLabelOverride,
   builtInNames: C_BUILT_INS,
+
+  // ── RFC #909 Ring 3: scope-based resolution hooks (RFC §5) ──────────
+  emitScopeCaptures: emitCppScopeCaptures,
+  interpretImport: interpretCppImport,
+  interpretTypeBinding: interpretCppTypeBinding,
+  bindingScopeFor: cppBindingScopeFor,
+  importOwningScope: cppImportOwningScope,
+  receiverBinding: cppReceiverBinding,
+  arityCompatibility: cppArityCompatibility,
+  // mergeBindings + resolveImportTarget live on ScopeResolver (see cpp/scope-resolver.ts).
 });

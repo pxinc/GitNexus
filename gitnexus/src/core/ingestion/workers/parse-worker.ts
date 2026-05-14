@@ -20,6 +20,7 @@ import {
   getTreeSitterContentByteLength,
   TREE_SITTER_MAX_BUFFER,
 } from '../constants.js';
+import { parseSourceSafe } from '../../tree-sitter/safe-parse.js';
 import type { SymbolTableReader } from '../model/symbol-table.js';
 import type { ExtractedHeritage } from '../model/heritage-map.js';
 
@@ -91,6 +92,7 @@ import { parseArktsWithFallback } from '../utils/arkts-parse-fallback.js';
 import type { ParsedFile } from 'gitnexus-shared';
 import { extractParsedFile } from '../scope-extractor-bridge.js';
 
+import { logger } from '../../logger.js';
 // ============================================================================
 // Types for serializable results
 // ============================================================================
@@ -185,6 +187,8 @@ export interface ExtractedAssignment {
   propertyName: string;
   /** Resolved type name of the receiver if available from TypeEnv */
   receiverTypeName?: string;
+  /** 1-indexed line number of the assignment site (used for per-site dedup) */
+  line?: number;
 }
 
 // `ExtractedHeritage` now lives in `../model/heritage-map.ts` and is
@@ -1395,7 +1399,7 @@ const processFileGroup = (
     if (parentPort) {
       parentPort.postMessage({ type: 'warning', message });
     } else {
-      console.warn(message);
+      logger.warn(message);
     }
     return;
   }
@@ -1416,6 +1420,11 @@ const processFileGroup = (
       isVueSetup = extracted.isSetup;
     }
 
+    // Per-language source-text transform (e.g., UE macro stripping for C++).
+    // Length-preserving — see LanguageProvider.preprocessSource contract.
+    parseContent =
+      getProvider(language).preprocessSource?.(parseContent, file.path) ?? parseContent;
+
     clearCaches(); // Reset memoization before each new file
 
     let tree;
@@ -1426,10 +1435,10 @@ const processFileGroup = (
         tree = parsed.tree;
         parseContent = parsed.content;
       } else {
-        tree = parser.parse(parseContent, undefined, parseOptions);
+        tree = parseSourceSafe(parser, parseContent, undefined, parseOptions);
       }
     } catch (err) {
-      console.warn(
+      logger.warn(
         `Failed to parse file ${file.path}: ${err instanceof Error ? err.message : String(err)}`,
       );
       continue;
@@ -1442,7 +1451,7 @@ const processFileGroup = (
     try {
       matches = query.matches(tree.rootNode);
     } catch (err) {
-      console.warn(
+      logger.warn(
         `Query execution failed for ${file.path}: ${err instanceof Error ? err.message : String(err)}`,
       );
       continue;
@@ -1480,10 +1489,16 @@ const processFileGroup = (
     // Runs BEFORE legacy extraction and its result is independent: a
     // failure here is caught inside `extractParsedFile` and does NOT
     // affect the legacy DAG path that follows.
-    const parsedFile = extractParsedFile(provider, parseContent, file.path, (message) => {
-      if (parentPort) parentPort.postMessage({ type: 'warning', message });
-      else console.warn(message);
-    });
+    const parsedFile = extractParsedFile(
+      provider,
+      parseContent,
+      file.path,
+      (message) => {
+        if (parentPort) parentPort.postMessage({ type: 'warning', message });
+        else logger.warn(message);
+      },
+      tree,
+    );
     if (parsedFile !== undefined) result.parsedFiles.push(parsedFile);
 
     // Pre-pass: extract heritage from query matches to build parentMap for buildTypeEnv.
@@ -1606,6 +1621,7 @@ const processFileGroup = (
             sourceId: srcId,
             receiverText,
             propertyName,
+            line: captureMap['assignment'].startPosition.row + 1,
             ...(receiverTypeName ? { receiverTypeName } : {}),
           });
         }
@@ -2117,10 +2133,13 @@ const processFileGroup = (
         }
       }
 
-      // Append #<paramCount> to Method/Constructor IDs to disambiguate overloads.
-      // Functions are not suffixed — they don't overload by name in the same scope.
+      // Append #<paramCount> to owned callable IDs to disambiguate overloads.
+      // Top-level Function IDs stay stable; functions inside an owner may overload.
       // When same-arity collisions exist, append ~type1,type2 for further disambiguation.
-      const needsAritySuffix = nodeLabel === 'Method' || nodeLabel === 'Constructor';
+      const needsAritySuffix =
+        nodeLabel === 'Method' ||
+        nodeLabel === 'Constructor' ||
+        (nodeLabel === 'Function' && enclosingClassId !== null);
       let arityTag = needsAritySuffix && arityForId !== undefined ? `#${arityForId}` : '';
       if (arityTag && defMethodMap && defMethodInfo) {
         const groups = buildCollisionGroups(defMethodMap);

@@ -38,6 +38,7 @@ import { runScopeResolution } from './run.js';
 import { SCOPE_RESOLVERS } from './registry.js';
 import { isDev, isSemanticModelValidatorEnabled } from '../../utils/env.js';
 
+import { logger } from '../../../logger.js';
 export interface ScopeResolutionOutput {
   /** True when at least one language ran. */
   readonly ran: boolean;
@@ -92,12 +93,24 @@ export const scopeResolutionPhase: PipelinePhase<ScopeResolutionOutput> = {
     // Worker-mode parses leave the cache empty for those files; they
     // also fall back to a fresh parse — no correctness impact.
     const parseOutput = getPhaseOutput<ParseOutput>(deps, 'parse');
-    const { scopeTreeCache, resolutionContext } = parseOutput;
+    const { scopeTreeCache, resolutionContext, parsedFiles: workerParsedFiles } = parseOutput;
     // SemanticModel populated during `parse`: scope-resolution consumes
     // TypeRegistry / MethodRegistry / SymbolTable lookups instead of
     // rebuilding parallel indexes. See ARCHITECTURE.md § "Semantic-model
     // source of truth".
     const model = resolutionContext.model;
+
+    // Build a per-file lookup of ParsedFile artifacts the workers (or
+    // sequential extracts) already produced. Threading this into
+    // `runScopeResolution` lets the per-language extract loop short-
+    // circuit `extractParsedFile` — the dominant cost on the warm-cache
+    // path, since workers can't return tree-sitter Trees across the
+    // MessageChannel and scope-resolution would otherwise re-parse
+    // every file from scratch on the main thread.
+    const preExtractedByPath = new Map<string, import('gitnexus-shared').ParsedFile>();
+    for (const pf of workerParsedFiles) {
+      preExtractedByPath.set(pf.filePath, pf);
+    }
 
     let totalFiles = 0;
     let totalImports = 0;
@@ -142,9 +155,10 @@ export const scopeResolutionPhase: PipelinePhase<ScopeResolutionOutput> = {
           files,
           treeCache: scopeTreeCache,
           resolutionConfig,
+          preExtractedParsedFiles: preExtractedByPath,
           onWarn: (msg) => {
             if (isSemanticModelValidatorEnabled()) {
-              console.warn(`[scope-resolution:${lang}] ${msg}`);
+              logger.warn(`[scope-resolution:${lang}] ${msg}`);
             }
           },
         },
@@ -162,7 +176,7 @@ export const scopeResolutionPhase: PipelinePhase<ScopeResolutionOutput> = {
       });
 
       if (isDev) {
-        console.log(
+        logger.info(
           `[scope-resolution:${lang}] ${stats.filesProcessed} files → ${stats.importsEmitted} IMPORTS + ${stats.referenceEdgesEmitted} reference edges (${stats.resolve.unresolved} unresolved sites, ${stats.referenceSkipped} skipped)`,
         );
       }

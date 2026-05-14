@@ -41,6 +41,7 @@ import { emitImportEdges } from '../graph-bridge/imports-to-edges.js';
 import type { ScopeResolver } from '../contract/scope-resolver.js';
 import { buildWorkspaceResolutionIndex } from '../workspace-index.js';
 
+import { logger } from '../../../logger.js';
 interface RunScopeResolutionInput {
   readonly graph: KnowledgeGraph;
   /**
@@ -71,6 +72,22 @@ interface RunScopeResolutionInput {
    * provider doesn't supply a config loader.
    */
   readonly resolutionConfig?: unknown;
+  /**
+   * Pre-extracted ParsedFile artifacts keyed by file path. When a
+   * file is present here, the extract loop reuses it directly and
+   * skips `extractParsedFile` (which would re-parse the file with
+   * tree-sitter on the main thread). Only files matching the
+   * provider's language are honored — the loop verifies this
+   * implicitly by language filter at the call-site (scopeResolution
+   * phase).
+   *
+   * Worker-mode parses produce these ParsedFile artifacts as a side
+   * effect of `extractParsedFile` running inside the worker; threading
+   * them here is what lets the warm-cache analyze run skip the ~58s
+   * scope-resolution re-parse loop on a multi-thousand-file repo.
+   * Cache miss is safe — falls back to fresh extract.
+   */
+  readonly preExtractedParsedFiles?: ReadonlyMap<string, ParsedFile>;
 }
 
 interface RunScopeResolutionStats {
@@ -90,27 +107,51 @@ export function runScopeResolution(
   const onWarn = input.onWarn ?? (() => {});
   const PROF = process.env.PROF_SCOPE_RESOLUTION === '1';
   const tStart = PROF ? process.hrtime.bigint() : 0n;
+  let fileContents: Map<string, string> | undefined;
+  const getFileContents = (): Map<string, string> => {
+    if (fileContents === undefined) {
+      fileContents = new Map<string, string>();
+      for (const f of files) fileContents.set(f.path, f.content);
+    }
+    return fileContents;
+  };
 
   // ── Phase 1: extract each file → ParsedFile ────────────────────────────
   const parsedFiles: ParsedFile[] = [];
   let filesSkipped = 0;
   const treeCache = input.treeCache;
+  const preExtracted = input.preExtractedParsedFiles;
+  let preExtractedHits = 0;
   for (const file of files) {
-    const cachedTree = treeCache?.get(file.path);
-    const parsed = extractParsedFile(
-      provider.languageProvider,
-      file.content,
-      file.path,
-      onWarn,
-      cachedTree,
-    );
+    let parsed: ParsedFile | undefined;
+    // Fast path: a worker (during the parse phase) already produced a
+    // ParsedFile for this file via `extractParsedFile`. Reuse it
+    // directly — skips a tree-sitter re-parse on the main thread.
+    if (preExtracted !== undefined) {
+      parsed = preExtracted.get(file.path);
+      if (parsed !== undefined) preExtractedHits++;
+    }
     if (parsed === undefined) {
-      filesSkipped++;
-      continue;
+      const cachedTree = treeCache?.get(file.path);
+      parsed = extractParsedFile(
+        provider.languageProvider,
+        file.content,
+        file.path,
+        onWarn,
+        cachedTree,
+      );
+      if (parsed === undefined) {
+        filesSkipped++;
+        continue;
+      }
     }
     provider.populateOwners(parsed);
     parsedFiles.push(parsed);
   }
+  if (PROF && preExtracted !== undefined) {
+    logger.warn(`[scope-resolution prof] pre-extracted hits: ${preExtractedHits}/${files.length}`);
+  }
+  provider.populateWorkspaceOwners?.(parsedFiles, { fileContents: getFileContents() });
 
   // Reconcile scope-resolution's ownership view into the SemanticModel.
   // See `reconcile-ownership.ts` for the full rationale (Contract
@@ -143,12 +184,15 @@ export function runScopeResolution(
   const allFilePaths = new Set(parsedFiles.map((f) => f.filePath));
   const nodeLookup = buildGraphNodeLookup(graph);
   const mroByClassDefId = provider.buildMro(graph, parsedFiles, nodeLookup);
+  const extendsOnlyMroByClassDefId = provider.buildExtendsOnlyMro?.(graph, parsedFiles, nodeLookup);
 
   const resolutionConfig = input.resolutionConfig;
   const finalized = finalizeScopeModel(parsedFiles, {
     hooks: {
       resolveImportTarget: (targetRaw, fromFile) =>
         provider.resolveImportTarget(targetRaw, fromFile, allFilePaths, resolutionConfig),
+      expandsWildcardTo: (targetModuleScope) =>
+        provider.expandsWildcardTo?.(targetModuleScope, parsedFiles) ?? [],
       mergeBindings: (existing, incoming, scopeId) =>
         provider.mergeBindings(existing, incoming, scopeId),
     },
@@ -162,7 +206,7 @@ export function runScopeResolution(
   // the type system.
   const indexes = {
     ...finalized,
-    methodDispatch: buildPopulatedMethodDispatch(mroByClassDefId),
+    methodDispatch: buildPopulatedMethodDispatch(mroByClassDefId, extendsOnlyMroByClassDefId),
   };
 
   // Build the workspace resolution index ONCE — scope-valued lookups
@@ -178,15 +222,20 @@ export function runScopeResolution(
   // The hook writes to `bindingAugmentations` only; finalized
   // `indexes.bindings` remains immutable post-finalize (I8).
   if (provider.populateNamespaceSiblings !== undefined) {
-    const fileContents = new Map<string, string>();
-    for (const f of files) fileContents.set(f.path, f.content);
     provider.populateNamespaceSiblings(parsedFiles, indexes, {
-      fileContents,
+      fileContents: getFileContents(),
       treeCache,
     });
   }
 
   const tFinalize = PROF ? process.hrtime.bigint() : 0n;
+
+  // Cross-package namespace typeBinding mirroring. Runs before
+  // propagateImportedReturnTypes so the SCC-ordered pass sees the
+  // mirrored bindings.
+  if (provider.mirrorNamespaceTypeBindings !== undefined) {
+    provider.mirrorNamespaceTypeBindings(parsedFiles, indexes, workspaceIndex);
+  }
 
   // Cross-file return-type propagation (Contract Invariant I3 timing:
   // after finalize, before resolve). Split-timed separately so the
@@ -195,6 +244,13 @@ export function runScopeResolution(
   // here, not in finalize).
   if (provider.propagatesReturnTypesAcrossImports !== false) {
     propagateImportedReturnTypes(parsedFiles, indexes, workspaceIndex);
+  }
+
+  if (provider.populateRangeBindings !== undefined) {
+    provider.populateRangeBindings(parsedFiles, indexes, {
+      fileContents: getFileContents(),
+      treeCache,
+    });
   }
   const tPropagate = PROF ? process.hrtime.bigint() : 0n;
 
@@ -228,6 +284,17 @@ export function runScopeResolution(
     workspaceIndex,
     readonlyModel,
   );
+  const unresolvedReceiverExtras =
+    provider.emitUnresolvedReceiverEdges !== undefined
+      ? provider.emitUnresolvedReceiverEdges(
+          graph,
+          indexes,
+          parsedFiles,
+          nodeLookup,
+          handledSites,
+          readonlyModel,
+        )
+      : 0;
   const freeCallExtras = emitFreeCallFallback(
     graph,
     indexes,
@@ -237,6 +304,12 @@ export function runScopeResolution(
     handledSites,
     readonlyModel,
     workspaceIndex,
+    {
+      allowGlobalFallback: provider.allowGlobalFreeCallFallback === true,
+      isFileLocalDef: provider.isFileLocalDef,
+      isCallableVisibleFromCaller: provider.isCallableVisibleFromCaller,
+      resolveAdlCandidates: provider.resolveAdlCandidates,
+    },
   );
   const { emitted, skipped } = emitReferencesViaLookup(
     graph,
@@ -255,7 +328,7 @@ export function runScopeResolution(
   if (PROF) {
     const tEnd = process.hrtime.bigint();
     const ns = (a: bigint, b: bigint): number => Number(b - a) / 1_000_000;
-    console.warn(
+    logger.warn(
       `[scope-resolution prof] extract=${ns(tStart, tExtract).toFixed(0)}ms` +
         ` finalize=${ns(tExtract, tFinalize).toFixed(0)}ms` +
         ` propagate=${ns(tFinalize, tPropagate).toFixed(0)}ms` +
@@ -271,7 +344,7 @@ export function runScopeResolution(
     filesSkipped,
     importsEmitted,
     resolve: resolveStats,
-    referenceEdgesEmitted: emitted + receiverExtras + freeCallExtras,
+    referenceEdgesEmitted: emitted + receiverExtras + unresolvedReceiverExtras + freeCallExtras,
     referenceSkipped: skipped,
   };
 }

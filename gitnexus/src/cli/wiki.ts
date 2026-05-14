@@ -19,6 +19,7 @@ import {
 import { WikiGenerator, type WikiOptions } from '../core/wiki/generator.js';
 import { resolveLLMConfig, type LLMProvider } from '../core/wiki/llm-client.js';
 import { detectCursorCLI } from '../core/wiki/cursor-client.js';
+import { logger } from '../core/logger.js';
 
 export interface WikiCommandOptions {
   force?: boolean;
@@ -32,6 +33,8 @@ export interface WikiCommandOptions {
   provider?: LLMProvider;
   verbose?: boolean;
   review?: boolean;
+  timeout?: string;
+  retries?: string;
 }
 
 /**
@@ -346,6 +349,16 @@ export const wikiCommand = async (inputPath?: string, options?: WikiCommandOptio
     }
   }
 
+  // ── Apply per-run overrides not saved to config ────────────────────
+  if (options?.timeout) {
+    const secs = parseInt(options.timeout, 10);
+    if (!isNaN(secs) && secs > 0) llmConfig.requestTimeoutMs = secs * 1000;
+  }
+  if (options?.retries) {
+    const n = parseInt(options.retries, 10);
+    if (!isNaN(n) && n > 0) llmConfig.maxAttempts = n;
+  }
+
   // ── Setup progress bar with elapsed timer ──────────────────────────
   const bar = new cliProgress.SingleBar(
     {
@@ -583,7 +596,7 @@ export const wikiCommand = async (inputPath?: string, options?: WikiCommandOptio
     } else {
       console.log(`\n  Error: ${err.message}\n`);
       if (process.env.GITNEXUS_VERBOSE) {
-        console.error(err);
+        logger.error({ err }, 'wiki command failed');
       }
     }
     process.exitCode = 1;
@@ -601,6 +614,38 @@ function hasGhCLI(): boolean {
   }
 }
 
+/**
+ * Strict Gist URL predicate. Rejects:
+ *   - any URL that does not parse (URL constructor throws)
+ *   - schemes other than https (drops `http:`, `file:`, `gist:`-style spoofs)
+ *   - hostnames that are not exactly `gist.github.com` (drops substring spoofs
+ *     like `https://evil.com/?u=gist.github.com` and userinfo-prefixed shapes
+ *     like `https://[email protected]/...` — note that URL.hostname
+ *     strips userinfo, so the equality check rejects the userinfo-prefixed
+ *     spoof if the actual host differs from gist.github.com)
+ *   - any URL containing userinfo (`username[:password]@`), which the URL
+ *     parser exposes via `.username` / `.password`. Defense-in-depth: even
+ *     when hostname matches, a credential-bearing URL is suspect and not
+ *     produced by `gh gist create`.
+ *
+ * Closes the substring-bypass class CodeQL `js/incomplete-url-substring-
+ * sanitization` flags.
+ */
+function isGistUrl(line: string): boolean {
+  const trimmed = line.trim();
+  try {
+    const u = new URL(trimmed);
+    return (
+      u.protocol === 'https:' &&
+      u.hostname === 'gist.github.com' &&
+      u.username === '' &&
+      u.password === ''
+    );
+  } catch {
+    return false;
+  }
+}
+
 function publishGist(htmlPath: string): { url: string; rawUrl: string } | null {
   try {
     const output = execFileSync(
@@ -609,13 +654,14 @@ function publishGist(htmlPath: string): { url: string; rawUrl: string } | null {
       { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
     ).trim();
 
-    // gh gist create prints the gist URL as the last line
-    const lines = output.split('\n');
-    const gistUrl = lines.find((l) => l.includes('gist.github.com')) || lines[lines.length - 1];
+    // `gh gist create` prints the gist URL as a line in the output. Find the
+    // first parseable Gist URL — if no line is a valid Gist URL, fail closed
+    // (do NOT fall back to lines[last]: a non-Gist last line would propagate
+    // through the regex below and produce a malformed `rawUrl`).
+    const gistUrl = output.split('\n').find(isGistUrl);
+    if (!gistUrl) return null;
 
-    if (!gistUrl || !gistUrl.includes('gist.github.com')) return null;
-
-    // Build a raw viewer URL via gist.githack.com
+    // Build a raw viewer URL via gist.githack.com.
     // gist URL format: https://gist.github.com/{user}/{id}
     const match = gistUrl.match(/gist\.github\.com\/([^/]+)\/([a-f0-9]+)/);
     let rawUrl = gistUrl;

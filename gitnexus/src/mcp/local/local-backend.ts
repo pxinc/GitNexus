@@ -16,6 +16,7 @@ import {
   isLbugReady,
   isWriteQuery,
 } from '../../core/lbug/pool-adapter.js';
+import { isWalCorruptionError, WAL_RECOVERY_SUGGESTION } from '../../core/lbug/lbug-config.js';
 export { isWriteQuery };
 // Embedding imports are lazy (dynamic import) to avoid loading onnxruntime-node
 // at MCP server startup — crashes on unsupported Node ABI versions (#89)
@@ -30,9 +31,18 @@ import {
 import { GroupService, type GroupToolPort } from '../../core/group/service.js';
 import { resolveAtGroupMemberRepoPath } from '../../core/group/resolve-at-member.js';
 import { collectBestChunks } from '../../core/embeddings/types.js';
+import {
+  rankExactEmbeddingRows,
+  type ExactEmbeddingRow,
+} from '../../core/embeddings/exact-search.js';
 import { EMBEDDING_TABLE_NAME, EMBEDDING_INDEX_NAME } from '../../core/lbug/schema.js';
+import {
+  getExactScanLimit,
+  isVectorExtensionSupportedByPlatform,
+} from '../../core/platform/capabilities.js';
 import { PhaseTimer } from '../../core/search/phase-timer.js';
-import { checkStaleness, checkCwdMatch } from '../../core/git-staleness.js';
+import { checkStalenessAsync, checkCwdMatch } from '../../core/git-staleness.js';
+import { logger } from '../../core/logger.js';
 // AI context generation is CLI-only (gitnexus analyze)
 // import { generateAIContextFiles } from '../../cli/ai-context.js';
 
@@ -156,29 +166,27 @@ const confidenceForRelType = (relType: string | undefined): number =>
 /** Structured error logging for query failures — replaces empty catch blocks */
 function logQueryError(context: string, err: unknown): void {
   const msg = err instanceof Error ? err.message : String(err);
-  console.error(`GitNexus [${context}]: ${msg}`);
+  logger.error({ context, err: msg }, 'GitNexus query failed');
 }
 
 /**
- * Structured per-query latency log for production aggregation (#553).
+ * Per-query latency telemetry for production aggregation (#553).
  *
- * Emitted on stderr — NOT stdout — because the MCP stdio transport uses
- * stdout exclusively for JSON-RPC responses (#324), and the CLI e2e test
- * `tool output goes to stdout via fd 1` asserts that stdout parses cleanly
- * as JSON. Any `console.log` from inside a tool handler would corrupt the
- * protocol. Matches the existing `logQueryError` convention above, which
- * uses stderr for the same reason.
+ * Logged at `debug` level — timing is observability/telemetry, not an
+ * error. Operators wanting per-query timing set `GITNEXUS_LOG_LEVEL=debug`
+ * (or equivalent). Emitting at `error` level (the original migration
+ * artifact) caused alerting rules to fire on every successful query and
+ * inflated stderr noise for every MCP/CLI invocation.
  *
- * The `GitNexus [query:timing] …` prefix keeps lines greppable; the
- * `phases` payload is JSON so log-scraping pipelines can parse it
- * without custom format knowledge.
+ * Emitted via the project logger which routes to stderr — never stdout —
+ * because the MCP stdio transport uses stdout exclusively for JSON-RPC
+ * responses (#324) and the CLI e2e test `tool output goes to stdout via
+ * fd 1` asserts stdout parses cleanly as JSON.
  */
 function logQueryTiming(query: string, phases: Record<string, number>): void {
   const totalMs = phases.wall ?? Object.values(phases).reduce((a, b) => a + b, 0);
   const truncated = query.length > 80 ? `${query.slice(0, 80)}…` : query;
-  console.error(
-    `GitNexus [query:timing] query=${JSON.stringify(truncated)} totalMs=${totalMs} phases=${JSON.stringify(phases)}`,
-  );
+  logger.debug({ query: truncated, totalMs, phases }, 'GitNexus query timing');
 }
 
 export interface CodebaseContext {
@@ -217,6 +225,14 @@ export class LocalBackend {
    * making MCP stderr unreadable.
    */
   private warnedSiblingDrift: Set<string> = new Set();
+
+  /**
+   * One-shot stderr warning for the VECTOR-extension fallback. Without this
+   * guard the diagnostic would fire on every `semanticSearch()` call on
+   * platforms where the extension is unsupported (e.g. Windows), making MCP
+   * stderr noisy per DoD §2.8.
+   */
+  private warnedVectorUnsupported = false;
 
   /**
    * Cross-repo group tools (CLI). Shares logic with MCP `group_*` handlers.
@@ -271,7 +287,7 @@ export class LocalBackend {
       // If kuzu exists but lbug doesn't, warn so the user knows to re-analyze.
       const kuzu = await cleanupOldKuzuFiles(storagePath);
       if (kuzu.found && kuzu.needsReindex) {
-        console.error(
+        logger.error(
           `GitNexus: "${entry.name}" has a stale KuzuDB index. Run: gitnexus analyze ${entry.path}`,
         );
       }
@@ -539,8 +555,15 @@ export class LocalBackend {
       byRemote.set(h.remoteUrl, list);
     }
 
-    return handles.map((h) => {
-      const stale = checkStaleness(h.repoPath, h.lastCommit);
+    // Check staleness for all repos in parallel instead of sequentially.
+    // Each check spawns an async `git rev-list` — with 200 repos the sync
+    // variant took ~50 s; parallel async brings it under a second (#1363).
+    const stalenessResults = await Promise.all(
+      handles.map((h) => checkStalenessAsync(h.repoPath, h.lastCommit)),
+    );
+
+    return handles.map((h, i) => {
+      const stale = stalenessResults[i];
       const selfNorm = norm(h.repoPath);
       const siblings = h.remoteUrl
         ? (byRemote.get(h.remoteUrl) ?? []).filter((e) => norm(e.repoPath) !== selfNorm)
@@ -621,7 +644,7 @@ export class LocalBackend {
     }
 
     this.warnedSiblingDrift.add(cacheKey);
-    console.error(`GitNexus: ${match.hint}`);
+    logger.error(`GitNexus: ${match.hint}`);
   }
 
   // ─── Tool Dispatch ───────────────────────────────────────────────
@@ -734,8 +757,10 @@ export class LocalBackend {
       timer.time('vector', this.semanticSearch(repo, searchQuery, searchLimit)),
     ]);
 
-    const bm25Results = bm25SearchResult.results;
-    const ftsUsed = bm25SearchResult.ftsUsed;
+    // Guard against undefined results (#1489) — when FTS is entirely
+    // unavailable the search helper may return an unexpected shape.
+    const bm25Results = bm25SearchResult?.results ?? [];
+    const ftsUsed = bm25SearchResult?.ftsUsed ?? false;
 
     // Merge via reciprocal rank fusion
     timer.start('merge');
@@ -753,8 +778,9 @@ export class LocalBackend {
       }
     }
 
-    for (let i = 0; i < semanticResults.length; i++) {
-      const result = semanticResults[i];
+    const safeSemanticResults = semanticResults ?? [];
+    for (let i = 0; i < safeSemanticResults.length; i++) {
+      const result = safeSemanticResults[i];
       const key = result.nodeId || result.filePath;
       const rrfScore = 1 / (60 + i);
       const existing = scoreMap.get(key);
@@ -958,7 +984,7 @@ export class LocalBackend {
       timing,
       ...(!ftsUsed && {
         warning:
-          'FTS extension unavailable - keyword search degraded. Run: gitnexus analyze --force to rebuild indexes.',
+          'FTS indexes missing — keyword search degraded. Run: gitnexus analyze --force to rebuild indexes.',
       }),
     };
   }
@@ -971,16 +997,32 @@ export class LocalBackend {
     query: string,
     limit: number,
   ): Promise<{ results: any[]; ftsUsed: boolean }> {
-    const { searchFTSFromLbug } = await import('../../core/search/bm25-index.js');
-    let bm25Results;
+    let searchFTSFromLbug;
     try {
-      bm25Results = await searchFTSFromLbug(query, limit, repo.id);
+      ({ searchFTSFromLbug } = await import('../../core/search/bm25-index.js'));
     } catch (err: any) {
-      console.error('GitNexus: BM25/FTS search failed (FTS indexes may not exist) -', err.message);
+      // Module import can fail in sandboxed MCP contexts (#1489)
+      logger.warn(
+        { err: err?.message },
+        'GitNexus: bm25-index.js import failed — falling back to semantic-only',
+      );
+      return { results: [], ftsUsed: false };
+    }
+    let ftsResponse;
+    try {
+      ftsResponse = await searchFTSFromLbug(query, limit, repo.id);
+    } catch (err: any) {
+      logger.error(
+        { err: err.message },
+        'GitNexus: BM25/FTS search failed (FTS indexes may not exist) -',
+      );
       return { results: [], ftsUsed: false };
     }
 
-    const ftsUsed = bm25Results.length === 0 || bm25Results[0]?.ftsUsed !== false;
+    // Guard against unexpected response shape (#1489) — ftsResponse.results
+    // could be undefined when the FTS extension is unavailable in the MCP process.
+    const bm25Results = ftsResponse?.results ?? [];
+    const ftsUsed = ftsResponse?.ftsAvailable ?? false;
 
     const results: any[] = [];
 
@@ -1064,27 +1106,79 @@ export class LocalBackend {
       const dims = getEmbeddingDims();
       const queryVecStr = `[${queryVec.join(',')}]`;
 
-      const bestChunks = await collectBestChunks(limit, async (fetchLimit) => {
-        const vectorQuery = `
-          CALL QUERY_VECTOR_INDEX('${EMBEDDING_TABLE_NAME}', '${EMBEDDING_INDEX_NAME}',
-            CAST(${queryVecStr} AS FLOAT[${dims}]), ${fetchLimit})
-          YIELD node AS emb, distance
-          WITH emb, distance
-          WHERE distance < 0.6
-          RETURN emb.nodeId AS nodeId, emb.chunkIndex AS chunkIndex,
-                 emb.startLine AS startLine, emb.endLine AS endLine, distance
-          ORDER BY distance
-        `;
+      let bestChunks = new Map<
+        string,
+        { distance: number; chunkIndex: number; startLine: number; endLine: number }
+      >();
+      if (isVectorExtensionSupportedByPlatform()) {
+        try {
+          bestChunks = await collectBestChunks(limit, async (fetchLimit) => {
+            const vectorQuery = `
+            CALL QUERY_VECTOR_INDEX('${EMBEDDING_TABLE_NAME}', '${EMBEDDING_INDEX_NAME}',
+              CAST(${queryVecStr} AS FLOAT[${dims}]), ${fetchLimit})
+            YIELD node AS emb, distance
+            WITH emb, distance
+            WHERE distance < 0.6
+            RETURN emb.nodeId AS nodeId, emb.chunkIndex AS chunkIndex,
+                   emb.startLine AS startLine, emb.endLine AS endLine, distance
+            ORDER BY distance
+          `;
 
-        const embResults = await executeQuery(repo.id, vectorQuery);
-        return embResults.map((row) => ({
+            const embResults = await executeQuery(repo.id, vectorQuery);
+            return embResults.map((row) => ({
+              nodeId: row.nodeId ?? row[0],
+              chunkIndex: row.chunkIndex ?? row[1] ?? 0,
+              startLine: row.startLine ?? row[2] ?? 0,
+              endLine: row.endLine ?? row[3] ?? 0,
+              distance: row.distance ?? row[4],
+            }));
+          });
+        } catch {
+          bestChunks = new Map();
+        }
+      } else if (!this.warnedVectorUnsupported) {
+        // Rare diagnostic: surface why we fell back to the exact scan path so
+        // operators can see at a glance that VECTOR is disabled by platform
+        // policy. Emitted once per `LocalBackend` instance lifetime to avoid
+        // noisy stderr on hot semantic-search paths (DoD §2.8).
+        this.warnedVectorUnsupported = true;
+        logger.warn(
+          'GitNexus [query:vector]: VECTOR extension not supported on this platform; using exact scan fallback',
+        );
+      }
+
+      if (bestChunks.size === 0) {
+        const embeddingCount = Number(tableCheck[0].cnt ?? tableCheck[0][0] ?? 0);
+        const exactLimit = getExactScanLimit();
+        if (embeddingCount > exactLimit) return [];
+
+        const rows = await executeQuery(
+          repo.id,
+          `
+          MATCH (e:${EMBEDDING_TABLE_NAME})
+          RETURN e.nodeId AS nodeId, e.chunkIndex AS chunkIndex,
+                 e.startLine AS startLine, e.endLine AS endLine, e.embedding AS embedding
+        `,
+        );
+        const exactRows: ExactEmbeddingRow[] = rows.map((row) => ({
           nodeId: row.nodeId ?? row[0],
           chunkIndex: row.chunkIndex ?? row[1] ?? 0,
           startLine: row.startLine ?? row[2] ?? 0,
           endLine: row.endLine ?? row[3] ?? 0,
-          distance: row.distance ?? row[4],
+          embedding: row.embedding ?? row[4] ?? [],
         }));
-      });
+        bestChunks = new Map(
+          rankExactEmbeddingRows(exactRows, queryVec, limit, 0.6).map((row) => [
+            row.nodeId,
+            {
+              distance: row.distance,
+              chunkIndex: row.chunkIndex,
+              startLine: row.startLine,
+              endLine: row.endLine,
+            },
+          ]),
+        );
+      }
 
       if (bestChunks.size === 0) return [];
 
@@ -1150,7 +1244,14 @@ export class LocalBackend {
       const result = await executeQuery(repo.id, params.query);
       return result;
     } catch (err: any) {
-      return { error: err.message || 'Query failed' };
+      const msg = err.message || 'Query failed';
+      if (isWalCorruptionError(err)) {
+        return {
+          error: msg,
+          recoverySuggestion: WAL_RECOVERY_SUGGESTION,
+        };
+      }
+      return { error: msg };
     }
   }
 
@@ -1808,6 +1909,30 @@ export class LocalBackend {
       include_content?: boolean;
     },
   ): Promise<any> {
+    try {
+      return await this._contextImpl(repo, params);
+    } catch (err: any) {
+      const msg = (err instanceof Error ? err.message : String(err)) || 'Context query failed';
+      if (isWalCorruptionError(err)) {
+        return {
+          error: msg,
+          recoverySuggestion: WAL_RECOVERY_SUGGESTION,
+        };
+      }
+      throw err;
+    }
+  }
+
+  private async _contextImpl(
+    repo: RepoHandle,
+    params: {
+      name?: string;
+      uid?: string;
+      file_path?: string;
+      kind?: string;
+      include_content?: boolean;
+    },
+  ): Promise<any> {
     await this.ensureInitialized(repo.id);
 
     const { name, uid, file_path, kind, include_content } = params;
@@ -1851,12 +1976,13 @@ export class LocalBackend {
       repo.id,
       `
       MATCH (caller)-[r:CodeRelation]->(n {id: $symId})
-      WHERE r.type IN ['CALLS', 'IMPORTS', 'EXTENDS', 'IMPLEMENTS', 'HAS_METHOD', 'HAS_PROPERTY', 'METHOD_OVERRIDES', 'OVERRIDES', 'METHOD_IMPLEMENTS', 'ACCESSES']
+      WHERE r.type IN ['CALLS', 'IMPORTS', 'EXTENDS', 'IMPLEMENTS', 'USES', 'HAS_METHOD', 'HAS_PROPERTY', 'METHOD_OVERRIDES', 'OVERRIDES', 'METHOD_IMPLEMENTS', 'ACCESSES']
       RETURN r.type AS relType, caller.id AS uid, caller.name AS name, caller.filePath AS filePath, labels(caller)[0] AS kind
       LIMIT 30
     `,
       { symId },
     );
+    let typedPropertyRows: any[] = [];
 
     // Fix #480: Class/Interface nodes have no direct CALLS/IMPORTS edges —
     // those point to Constructor and File nodes respectively. Fetch those
@@ -1890,23 +2016,24 @@ export class LocalBackend {
 
     if (isClassLike) {
       try {
-        // Run both incoming-ref queries in parallel — they are independent.
-        const [memberIncoming, fileIncoming] = await Promise.all([
-          executeParameterized(
-            repo.id,
-            `
+        // Run incoming-ref queries in parallel — they are independent.
+        const [memberIncoming, fileIncoming, typedPropertyIncoming, typedProperties] =
+          await Promise.all([
+            executeParameterized(
+              repo.id,
+              `
             MATCH (n)-[hm:CodeRelation]->(member)
             WHERE n.id = $symId AND hm.type = 'HAS_METHOD'
             MATCH (caller)-[r:CodeRelation]->(member)
-            WHERE r.type IN ['CALLS', 'IMPORTS', 'EXTENDS', 'IMPLEMENTS', 'ACCESSES']
+            WHERE r.type IN ['CALLS', 'IMPORTS', 'EXTENDS', 'IMPLEMENTS', 'USES', 'ACCESSES']
             RETURN r.type AS relType, caller.id AS uid, caller.name AS name, caller.filePath AS filePath, labels(caller)[0] AS kind
             LIMIT 30
           `,
-            { symId },
-          ),
-          executeParameterized(
-            repo.id,
-            `
+              { symId },
+            ),
+            executeParameterized(
+              repo.id,
+              `
             MATCH (f:File)-[rel:CodeRelation]->(n)
             WHERE n.id = $symId AND rel.type = 'DEFINES'
             MATCH (caller)-[r:CodeRelation]->(f)
@@ -1914,9 +2041,45 @@ export class LocalBackend {
             RETURN r.type AS relType, caller.id AS uid, caller.name AS name, caller.filePath AS filePath, labels(caller)[0] AS kind
             LIMIT 30
           `,
-            { symId },
-          ),
-        ]);
+              { symId },
+            ),
+            executeParameterized(
+              repo.id,
+              `
+            MATCH (p:\`Property\`)
+            WHERE p.declaredType = $name
+               OR p.declaredType STARTS WITH $genericPrefix
+               OR p.declaredType CONTAINS $genericArg
+            MATCH (caller)-[r:CodeRelation]->(p)
+            WHERE r.type IN ['CALLS', 'IMPORTS', 'EXTENDS', 'IMPLEMENTS', 'USES', 'ACCESSES']
+            RETURN r.type AS relType, caller.id AS uid, caller.name AS name, caller.filePath AS filePath, labels(caller)[0] AS kind
+            LIMIT 30
+          `,
+              {
+                name: sym.name,
+                genericPrefix: `${sym.name}<`,
+                genericArg: `<${sym.name}>`,
+              },
+            ),
+            executeParameterized(
+              repo.id,
+              `
+            MATCH (p:\`Property\`)
+            WHERE p.declaredType = $name
+               OR p.declaredType STARTS WITH $genericPrefix
+               OR p.declaredType CONTAINS $genericArg
+            RETURN p.id AS uid, p.name AS name, p.filePath AS filePath, labels(p)[0] AS kind,
+                   p.declaredType AS declaredType
+            LIMIT 30
+          `,
+              {
+                name: sym.name,
+                genericPrefix: `${sym.name}<`,
+                genericArg: `<${sym.name}>`,
+              },
+            ),
+          ]);
+        typedPropertyRows = typedProperties;
 
         // Deduplicate by (relType, uid) — a caller can have multiple relation
         // types to the same target (e.g. both IMPORTS and CALLS), and each
@@ -1924,7 +2087,7 @@ export class LocalBackend {
         const seenKeys = new Set(
           incomingRows.map((r: any) => `${r.relType || r[0]}:${r.uid || r[1]}`),
         );
-        for (const r of [...memberIncoming, ...fileIncoming]) {
+        for (const r of [...memberIncoming, ...fileIncoming, ...typedPropertyIncoming]) {
           const key = `${r.relType || r[0]}:${r.uid || r[1]}`;
           if (!seenKeys.has(key)) {
             seenKeys.add(key);
@@ -1941,7 +2104,7 @@ export class LocalBackend {
       repo.id,
       `
       MATCH (n {id: $symId})-[r:CodeRelation]->(target)
-      WHERE r.type IN ['CALLS', 'IMPORTS', 'EXTENDS', 'IMPLEMENTS', 'HAS_METHOD', 'HAS_PROPERTY', 'METHOD_OVERRIDES', 'OVERRIDES', 'METHOD_IMPLEMENTS', 'ACCESSES']
+      WHERE r.type IN ['CALLS', 'IMPORTS', 'EXTENDS', 'IMPLEMENTS', 'USES', 'HAS_METHOD', 'HAS_PROPERTY', 'METHOD_OVERRIDES', 'OVERRIDES', 'METHOD_IMPLEMENTS', 'ACCESSES']
       RETURN r.type AS relType, target.id AS uid, target.name AS name, target.filePath AS filePath, labels(target)[0] AS kind
       LIMIT 30
     `,
@@ -2030,6 +2193,17 @@ export class LocalBackend {
       },
       incoming: categorize(incomingRows),
       outgoing: categorize(outgoingRows),
+      ...(typedPropertyRows.length > 0
+        ? {
+            typed_properties: typedPropertyRows.map((r: any) => ({
+              uid: r.uid || r[0],
+              name: r.name || r[1],
+              filePath: r.filePath || r[2],
+              kind: r.kind || r[3],
+              declaredType: r.declaredType || r[4],
+            })),
+          }
+        : {}),
       processes: processRows.map((r: any) => ({
         id: r.pid || r[0],
         name: r.label || r[1],
@@ -2568,6 +2742,7 @@ export class LocalBackend {
         impactedCount: 0,
         risk: 'UNKNOWN',
         suggestion: 'The graph query failed — try gitnexus context <symbol> as a fallback',
+        ...(isWalCorruptionError(err) ? { recoverySuggestion: WAL_RECOVERY_SUGGESTION } : {}),
       };
     }
   }
@@ -2594,6 +2769,7 @@ export class LocalBackend {
     const mappedRelTypes = params.relationTypes?.flatMap((t: string) =>
       t === 'OVERRIDES' ? ['OVERRIDES', 'METHOD_OVERRIDES'] : [t],
     );
+    const hasExplicitRelationTypes = mappedRelTypes !== undefined && mappedRelTypes.length > 0;
     const rawRelTypes =
       mappedRelTypes && mappedRelTypes.length > 0
         ? mappedRelTypes.filter((t: string) => VALID_RELATION_TYPES.has(t))
@@ -2602,6 +2778,7 @@ export class LocalBackend {
             'IMPORTS',
             'EXTENDS',
             'IMPLEMENTS',
+            'USES',
             'METHOD_OVERRIDES',
             'OVERRIDES',
             'METHOD_IMPLEMENTS',
@@ -2614,6 +2791,7 @@ export class LocalBackend {
             'IMPORTS',
             'EXTENDS',
             'IMPLEMENTS',
+            'USES',
             'METHOD_OVERRIDES',
             'OVERRIDES',
             'METHOD_IMPLEMENTS',
@@ -2673,9 +2851,16 @@ export class LocalBackend {
     };
     const symType = outcome.resolvedLabel || outcome.symbol.type || '';
 
+    const effectiveRelationTypes =
+      (symType === 'Class' || symType === 'Interface') &&
+      !hasExplicitRelationTypes &&
+      !relationTypes.includes('ACCESSES')
+        ? [...relationTypes, 'ACCESSES']
+        : relationTypes;
+
     return this._runImpactBFS(repo, sym, symType, direction, {
       maxDepth,
-      relationTypes,
+      relationTypes: effectiveRelationTypes,
       includeTests,
       minConfidence,
     });
@@ -2752,6 +2937,30 @@ export class LocalBackend {
           const rid = r.id || r[0];
           // Owning files are internal seeds — add to both frontier and visited
           // so they don't pollute impacted (they are containers, not dependents).
+          if (rid && !visited.has(rid)) {
+            visited.add(rid);
+            frontier.push(rid);
+          }
+        }
+
+        const typedPropertyRows = await executeParameterized(
+          repo.id,
+          `
+          MATCH (p:\`Property\`)
+          WHERE p.declaredType = $name
+             OR p.declaredType STARTS WITH $genericPrefix
+             OR p.declaredType CONTAINS $genericArg
+          RETURN p.id AS id, p.name AS name, labels(p)[0] AS type, p.filePath AS filePath
+        `,
+          {
+            name: sym.name,
+            genericPrefix: `${sym.name}<`,
+            genericArg: `<${sym.name}>`,
+          },
+        );
+
+        for (const r of typedPropertyRows) {
+          const rid = r.id || r[0];
           if (rid && !visited.has(rid)) {
             visited.add(rid);
             frontier.push(rid);
@@ -3122,8 +3331,14 @@ export class LocalBackend {
       relationTypes: string[];
       minConfidence: number;
       includeTests: boolean;
+      signal?: AbortSignal;
     },
   ): Promise<any | null> {
+    // Honor an already-aborted signal at the entry boundary as a fast
+    // path. Cooperative cancellation inside _runImpactBFS is out of
+    // scope — the caller's Promise.race against the same signal
+    // resolves the await regardless of how long this body runs.
+    if (opts.signal?.aborted) return null;
     try {
       await this.refreshRepos();
       await this.ensureInitialized(repoId);

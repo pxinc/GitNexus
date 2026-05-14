@@ -46,11 +46,15 @@ import {
   findExportedDef,
   findOwnedMember,
   findReceiverTypeBinding,
+  isClassLike,
 } from '../scope/walkers.js';
 import { tryEmitEdge } from '../graph-bridge/edges.js';
 import { resolveCompoundReceiverClass } from '../passes/compound-receiver.js';
 import { resolveDefGraphId } from '../graph-bridge/ids.js';
-import { narrowOverloadCandidates } from './overload-narrowing.js';
+import {
+  narrowOverloadCandidates,
+  isOverloadAmbiguousAfterNormalization,
+} from './overload-narrowing.js';
 
 /** Subset of `ScopeResolver` consumed by this pass. Accepting the
  *  subset rather than the full provider keeps tests and partial
@@ -58,10 +62,12 @@ import { narrowOverloadCandidates } from './overload-narrowing.js';
 type ReceiverBoundProviderSubset = Pick<
   ScopeResolver,
   | 'isSuperReceiver'
+  | 'isSuperReceiverInContext'
   | 'fieldFallbackOnMethodLookup'
   | 'collapseMemberCallsByCallerTarget'
   | 'unwrapCollectionAccessor'
   | 'hoistTypeBindingsToModule'
+  | 'resolveQualifiedReceiverMember'
 >;
 
 export function emitReceiverBoundCalls(
@@ -161,10 +167,26 @@ export function emitReceiverBoundCalls(
       const siteKey = `${parsed.filePath}:${site.atRange.startLine}:${site.atRange.startCol}`;
 
       // ── super branch ─────────────────────────────────────────────
-      if (provider.isSuperReceiver(receiverName)) {
+      // Languages with caller-context-dependent super classification
+      // (C++) define `isSuperReceiverInContext`; we prefer it. Simple
+      // text-only languages (Python, Java, PHP) use the plain hook.
+      const isSuper =
+        provider.isSuperReceiverInContext !== undefined
+          ? provider.isSuperReceiverInContext(receiverName, site.inScope, scopes)
+          : provider.isSuperReceiver(receiverName);
+      if (isSuper) {
         const enclosingClass = findEnclosingClassDef(site.inScope, scopes);
         if (enclosingClass !== undefined) {
-          const ancestors = scopes.methodDispatch.mroFor(enclosingClass.nodeId);
+          // For super-receiver dispatch (`parent::`, `base.`, `super()`),
+          // walk the inheritance-only ancestor chain when the language
+          // exposes it. PHP's `parent::` semantically bypasses composed
+          // traits; other languages without mixin augmentation have no
+          // `extendsOnlyMroFor` and fall back to `mroFor`.
+          const extendsOnly = scopes.methodDispatch.extendsOnlyMroFor;
+          const ancestors =
+            extendsOnly !== undefined
+              ? extendsOnly(enclosingClass.nodeId)
+              : scopes.methodDispatch.mroFor(enclosingClass.nodeId);
           let memberDef: SymbolDefinition | undefined;
           for (const ownerId of ancestors) {
             memberDef = findOwnedMember(ownerId, memberName, model);
@@ -249,9 +271,46 @@ export function emitReceiverBoundCalls(
       }
 
       // ── Case 1: namespace receiver ───────────────────────────────
-      const targetFile = namespaceTargets.get(receiverName);
-      if (targetFile !== undefined) {
-        const memberDef = findExportedDef(targetFile, memberName, index);
+      const targetFiles = namespaceTargets.get(receiverName);
+      if (targetFiles !== undefined) {
+        let found = false;
+        for (const targetFile of targetFiles) {
+          const memberDef = findExportedDef(targetFile, memberName, index);
+          if (memberDef !== undefined) {
+            const ok = tryEmitEdge(
+              graph,
+              scopes,
+              nodeLookup,
+              site,
+              memberDef,
+              memberDef.filePath !== parsed.filePath ? 'import-resolved' : 'global',
+              seen,
+              0.85,
+              collapse,
+            );
+            if (ok) emitted++;
+            handledSites.add(siteKey);
+            found = true;
+            break;
+          }
+        }
+        if (found) continue;
+      }
+
+      // ── Case 1.5: qualified namespace-receiver (language-specific) ───
+      // Languages whose qualified-name semantics need workspace-wide
+      // namespace-scope walking (C++ `outer::foo()`, including inline-
+      // namespace transitive traversal) implement `resolveQualifiedReceiverMember`.
+      // Runs before Case 2 so namespace receivers don't accidentally match a
+      // class with the same simple name.
+      if (provider.resolveQualifiedReceiverMember !== undefined) {
+        const memberDef = provider.resolveQualifiedReceiverMember(
+          receiverName,
+          memberName,
+          site.inScope,
+          scopes,
+          parsedFiles,
+        );
         if (memberDef !== undefined) {
           const ok = tryEmitEdge(
             graph,
@@ -277,7 +336,21 @@ export function emitReceiverBoundCalls(
         let memberDef: SymbolDefinition | undefined;
         for (const ownerId of chain) {
           memberDef = findOwnedMember(ownerId, memberName, model);
-          if (memberDef !== undefined) break;
+          if (memberDef !== undefined) {
+            // The MRO chain is most-derived-first ([classDef, ...ancestors]).
+            // If the most-derived definition is arity-incompatible with the
+            // call site, PHP throws ArgumentCountError at runtime — it does
+            // NOT silently dispatch to an ancestor. Terminate the chain walk
+            // so no edge is emitted, rather than falling through to an
+            // arity-compatible ancestor (which would be a false positive).
+            if (
+              narrowOverloadCandidates([memberDef], site.arity, site.argumentTypes).length === 0
+            ) {
+              memberDef = undefined;
+              break;
+            }
+            break;
+          }
         }
         if (memberDef !== undefined) {
           const reason =
@@ -309,28 +382,33 @@ export function emitReceiverBoundCalls(
       if (typeRef !== undefined && typeRef.rawName.includes('.')) {
         const [nsName, ...classNameParts] = typeRef.rawName.split('.');
         const className = classNameParts.join('.');
-        const targetFile3 = namespaceTargets.get(nsName);
-        if (targetFile3 !== undefined && className.length > 0) {
-          const classDef3 = findExportedDef(targetFile3, className, index);
-          if (classDef3 !== undefined) {
-            const memberDef = findOwnedMember(classDef3.nodeId, memberName, model);
-            if (memberDef !== undefined) {
-              const ok = tryEmitEdge(
-                graph,
-                scopes,
-                nodeLookup,
-                site,
-                memberDef,
-                memberDef.filePath !== parsed.filePath ? 'import-resolved' : 'global',
-                seen,
-              );
-              if (ok) {
-                emitted++;
-                handledSites.add(siteKey);
+        const targetFiles3 = namespaceTargets.get(nsName);
+        if (targetFiles3 !== undefined && className.length > 0) {
+          let found3 = false;
+          for (const targetFile3 of targetFiles3) {
+            const classDef3 = findExportedDef(targetFile3, className, index);
+            if (classDef3 !== undefined) {
+              const memberDef = findOwnedMember(classDef3.nodeId, memberName, model);
+              if (memberDef !== undefined) {
+                const ok = tryEmitEdge(
+                  graph,
+                  scopes,
+                  nodeLookup,
+                  site,
+                  memberDef,
+                  memberDef.filePath !== parsed.filePath ? 'import-resolved' : 'global',
+                  seen,
+                );
+                if (ok) {
+                  emitted++;
+                  handledSites.add(siteKey);
+                }
+                found3 = true;
+                break;
               }
-              continue;
             }
           }
+          if (found3) continue;
         }
       }
 
@@ -394,10 +472,20 @@ export function emitReceiverBoundCalls(
       if (typeRef !== undefined && !typeRef.rawName.includes('.')) {
         let ownerDef = findClassBindingInScope(site.inScope, typeRef.rawName, scopes);
         // `findClassBindingInScope(..., typeRef.rawName)` only works when
-        // rawName is itself a class symbol. Map for-of tuple bindings
-        // (`__MAP_TUPLE_i__:mapId`), callable aliases (`getUser` → User),
-        // and other compound-friendly shapes need the compound resolver
-        // keyed by the receiver identifier.
+        // rawName is itself a class symbol reachable through scope bindings.
+        // For languages with namespace-style imports (Go), imported types
+        // don't create bindings. Fall back to QualifiedNameIndex — single-
+        // match wins; ambiguous/missing falls through.
+        if (ownerDef === undefined) {
+          const qnameIds = scopes.qualifiedNames.get(typeRef.rawName);
+          if (qnameIds.length === 1) {
+            const qdef = scopes.defs.get(qnameIds[0]!);
+            if (qdef !== undefined && isClassLike(qdef.type)) ownerDef = qdef;
+          }
+        }
+        // Map for-of tuple bindings (`__MAP_TUPLE_i__:mapId`), callable
+        // aliases (`getUser` → User), and other compound-friendly shapes
+        // need the compound resolver keyed by the receiver identifier.
         if (ownerDef === undefined) {
           ownerDef = resolveCompoundReceiverClass(
             receiverName,
@@ -410,9 +498,24 @@ export function emitReceiverBoundCalls(
         if (ownerDef !== undefined) {
           const chain = [ownerDef.nodeId, ...scopes.methodDispatch.mroFor(ownerDef.nodeId)];
           let memberDef: SymbolDefinition | undefined;
+          let ambiguous = false;
           for (const ownerId of chain) {
-            memberDef = pickOverload(ownerId, memberName, site, model);
-            if (memberDef !== undefined) break;
+            const picked = pickOverload(ownerId, memberName, site, model);
+            if (picked === OVERLOAD_AMBIGUOUS) {
+              ambiguous = true;
+              break;
+            }
+            if (picked !== undefined) {
+              memberDef = picked;
+              break;
+            }
+          }
+          if (ambiguous) {
+            // Suppress and mark handled so `emitReferencesViaLookup`
+            // doesn't re-emit the pre-resolved reference. See
+            // OVERLOAD_AMBIGUOUS docstring for the upstream cause.
+            handledSites.add(siteKey);
+            continue;
           }
           if (memberDef !== undefined) {
             // For read/write ACCESSES, mirror the legacy DAG's reason
@@ -465,7 +568,7 @@ function pickOverload(
   memberName: string,
   site: ParsedFile['referenceSites'][number],
   model: SemanticModel,
-): SymbolDefinition | undefined {
+): SymbolDefinition | typeof OVERLOAD_AMBIGUOUS | undefined {
   const overloads = model.methods.lookupAllByOwner(ownerId, memberName);
   if (overloads.length === 0) {
     // Non-callable member (field / property / variable) — ACCESSES
@@ -476,5 +579,22 @@ function pickOverload(
   if (overloads.length === 1) return overloads[0];
 
   const candidates = narrowOverloadCandidates(overloads, site.arity, site.argumentTypes);
+  // When narrowing leaves >1 candidate that share identical normalized
+  // parameter-types (e.g., C++ `f(int)` vs `f(long)` both collapsed to
+  // `['int']` by `normalizeCppParamType`), suppress the edge entirely.
+  // The graph schema has no ambiguous-target edge model, so emitting one
+  // would arbitrarily pick a candidate and lie about the call's target.
+  // PR #1520 review follow-up plan U2 / Claude review Finding 5.
+  if (isOverloadAmbiguousAfterNormalization(candidates, site.arity)) return OVERLOAD_AMBIGUOUS;
   return candidates[0] ?? overloads[0];
 }
+
+/**
+ * Sentinel returned by `pickOverload` when narrowing leaves >1 candidate
+ * sharing identical normalized parameter-types. Callers should suppress
+ * the CALLS edge AND mark the site as handled so `emitReferencesViaLookup`
+ * does not re-emit from the pre-resolved reference index. See
+ * `pickOverload` JSDoc for the upstream cause (per-language normalizer
+ * collapses distinct types in arity-metadata).
+ */
+export const OVERLOAD_AMBIGUOUS = Symbol('overload-ambiguous');

@@ -1,4 +1,5 @@
 import Parser from 'tree-sitter';
+import { parseSourceSafe } from '../../tree-sitter/safe-parse.js';
 
 /**
  * Shared, language-agnostic tree-sitter scanning utilities used by group
@@ -154,8 +155,8 @@ export function scanFile<TMeta>(
 ): ScanMatch<TMeta>[] {
   let tree: Parser.Tree;
   try {
-    parser.setLanguage(plugin.language as any);
-    tree = parser.parse(content);
+    parser.setLanguage(plugin.language);
+    tree = parseSourceSafe(parser, content);
   } catch {
     return [];
   }
