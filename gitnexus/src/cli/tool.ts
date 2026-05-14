@@ -239,3 +239,34 @@ export async function detectChangesCommand(options?: {
   });
   output(formatDetectChangesResult(result));
 }
+
+export async function renameCommand(
+  newName: string,
+  options?: {
+    repo?: string;
+    symbolName?: string;
+    symbolUid?: string;
+    file?: string;
+    dryRun?: boolean;
+    apply?: boolean;
+  },
+): Promise<void> {
+  if (!newName?.trim()) {
+    console.error('Usage: gitnexus rename <new_name> --symbol-name <old>');
+    process.exit(1);
+  }
+  if (!options?.symbolName && !options?.symbolUid) {
+    console.error('Error: provide --symbol-name or --symbol-uid to identify the target');
+    process.exit(1);
+  }
+  const backend = await getBackend();
+  const result = await backend.callTool('rename', {
+    new_name: newName,
+    symbol_name: options?.symbolName,
+    symbol_uid: options?.symbolUid,
+    file_path: options?.file,
+    dry_run: options?.apply ? false : (options?.dryRun ?? true),
+    repo: options?.repo,
+  });
+  output(result);
+}

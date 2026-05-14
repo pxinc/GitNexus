@@ -11,8 +11,10 @@
 import { SupportedLanguages } from 'gitnexus-shared';
 import type { NodeLabel } from 'gitnexus-shared';
 import { defineLanguage } from '../language-provider.js';
+import { createCallExtractor } from '../call-extractors/generic.js';
 import { createClassExtractor } from '../class-extractors/generic.js';
 import type { ClassExtractionConfig } from '../class-types.js';
+import { createHeritageExtractor } from '../heritage-extractors/generic.js';
 import type { SyntaxNode } from '../utils/ast-helpers.js';
 import { typeConfig as typescriptConfig } from '../type-extractors/typescript.js';
 import { tsExportChecker } from '../export-detection.js';
@@ -121,5 +123,7 @@ export const arktsProvider = defineLanguage({
     extractFunctionName: arktsExtractFunctionName,
   }),
   classExtractor: createClassExtractor(arktsClassConfig),
+  callExtractor: createCallExtractor({ language: SupportedLanguages.ArkTS }),
+  heritageExtractor: createHeritageExtractor(SupportedLanguages.ArkTS),
   builtInNames: new Set([...BUILT_INS, ...ARKTS_UI_COMPONENTS]),
 });

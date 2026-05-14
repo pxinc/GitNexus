@@ -74,6 +74,34 @@ function nonJvmNodes(
   ];
 }
 
+/** Method-level CALLS topology: Class -HAS_METHOD-> Method, Caller -CALLS-> Method.
+ *  This models ArkTS/TypeScript where callers invoke specific methods
+ *  (e.g., MRouter.push()) rather than the class itself. */
+function methodCallNodes(
+  lang: string,
+  ext: string,
+  cls: string,
+  methodName: string,
+  caller: string,
+  callerLabel: string,
+  importer: string,
+  clsPath: string,
+  callerPath: string,
+  importerPath: string,
+): string[] {
+  return [
+    `CREATE (f:File {id:'${lang}:file:${cls}', name:'${cls}.${ext}', filePath:'${clsPath}', content:''})`,
+    `CREATE (c:Class {id:'${lang}:class:${cls}', name:'${cls}', filePath:'${clsPath}', startLine:1, endLine:50, isExported:true, content:'', description:''})`,
+    `CREATE (m:Method {id:'${lang}:method:${cls}_${methodName}', name:'${methodName}', filePath:'${clsPath}', startLine:15, endLine:25, isExported:true, content:'', description:''})`,
+    `CREATE (caller:${callerLabel} {id:'${lang}:fn:${caller}', name:'${caller}', filePath:'${callerPath}', startLine:1, endLine:10, isExported:false, content:'', description:''})`,
+    `CREATE (imp:File {id:'${lang}:file:${importer}', name:'${importer}.${ext}', filePath:'${importerPath}', content:''})`,
+    `MATCH (c:Class {id:'${lang}:class:${cls}'}), (m:Method {id:'${lang}:method:${cls}_${methodName}'}) CREATE (c)-[:CodeRelation {type:'HAS_METHOD', confidence:1.0, reason:'class-method', step:0}]->(m)`,
+    `MATCH (f:File {id:'${lang}:file:${cls}'}), (c:Class {id:'${lang}:class:${cls}'}) CREATE (f)-[:CodeRelation {type:'DEFINES', confidence:1.0, reason:'', step:0}]->(c)`,
+    `MATCH (a:${callerLabel} {id:'${lang}:fn:${caller}'}), (b:Method {id:'${lang}:method:${cls}_${methodName}'}) CREATE (a)-[:CodeRelation {type:'CALLS', confidence:0.9, reason:'direct', step:0}]->(b)`,
+    `MATCH (a:File {id:'${lang}:file:${importer}'}), (b:File {id:'${lang}:file:${cls}'}) CREATE (a)-[:CodeRelation {type:'IMPORTS', confidence:0.9, reason:'import', step:0}]->(b)`,
+  ];
+}
+
 // ─── Combined seed for all languages ─────────────────────────────────────────
 
 const SEED = [
@@ -243,13 +271,41 @@ const SEED = [
     'src/workers/worker.cpp',
     'src/main.cpp',
   ),
+
+  // ArkTS — method-level CALLS topology
+  ...methodCallNodes(
+    'arkts',
+    'ets',
+    'MRouter',
+    'push',
+    'navigateToPage',
+    'Function',
+    'app',
+    'src/router/MRouter.ets',
+    'src/pages/HomePage.ets',
+    'src/app.ets',
+  ),
+
+  // TypeScript (method-level) — CALLS -> Method, not Class
+  ...methodCallNodes(
+    'ts_mcall',
+    'ts',
+    'ApiClient',
+    'request',
+    'fetchData',
+    'Function',
+    'index',
+    'src/api/ApiClient.ts',
+    'src/services/data.ts',
+    'src/index.ts',
+  ),
 ];
 
 // ─── Shared assertion helper ──────────────────────────────────────────────────
 
 function suiteFor(
   lang: string,
-  topology: 'JVM (Constructor+File)' | 'direct CALLS',
+  topology: 'JVM (Constructor+File)' | 'direct CALLS' | 'method-level CALLS',
   getBackend: () => LocalBackend,
   className: string,
   callerName: string,
@@ -435,6 +491,26 @@ withTestLbugDB(
       'enqueue',
       'main.cpp',
       'src/threading/thread_pool.cpp',
+    );
+
+    // Method-level CALLS languages
+    suiteFor(
+      'ArkTS',
+      'method-level CALLS',
+      () => backend,
+      'MRouter',
+      'navigateToPage',
+      'app.ets',
+      'src/router/MRouter.ets',
+    );
+    suiteFor(
+      'TypeScript (method-level)',
+      'method-level CALLS',
+      () => backend,
+      'ApiClient',
+      'fetchData',
+      'index.ts',
+      'src/api/ApiClient.ts',
     );
   },
   {

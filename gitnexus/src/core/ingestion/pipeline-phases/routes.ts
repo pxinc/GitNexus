@@ -17,6 +17,7 @@ import type { ParseOutput } from './parse.js';
 import { nextjsFileToRouteURL, normalizeFetchURL } from '../route-extractors/nextjs.js';
 import { expoFileToRouteURL } from '../route-extractors/expo.js';
 import { phpFileToRouteURL } from '../route-extractors/php.js';
+import { extractArkTSRoutes } from '../route-extractors/arkts-mrouter.js';
 import {
   extractResponseShapes,
   extractPHPResponseShapes,
@@ -129,6 +130,18 @@ export const routesPhase: PipelinePhase<RoutesOutput> = {
         filePath: dr.filePath,
         source: `decorator-${dr.decoratorName}`,
       });
+    }
+
+    // ── ArkTS MRouter routes (scan .ets files for RouteConfig uris) ──
+    const arktsFiles = allPaths.filter((p) => p.endsWith('.ets'));
+    if (arktsFiles.length > 0) {
+      const arktsContents = await readFileContents(ctx.repoPath, arktsFiles);
+      for (const [filePath, content] of arktsContents) {
+        const arktsRoutes = extractArkTSRoutes(filePath, content);
+        for (const r of arktsRoutes) {
+          addRoute(r.uri, { filePath, source: `mrouter-${r.type}` });
+        }
+      }
     }
 
     let handlerContents: Map<string, string> | undefined;

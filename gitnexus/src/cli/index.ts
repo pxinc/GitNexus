@@ -196,6 +196,17 @@ program
   .option('-r, --repo <name>', 'Target repository')
   .action(createLazyAction(() => import('./tool.js'), 'detectChangesCommand'));
 
+program
+  .command('rename <new_name>')
+  .description('Multi-file coordinated rename using knowledge graph + text search')
+  .requiredOption('-s, --symbol-name <name>', 'Current symbol name to rename')
+  .option('-r, --repo <name>', 'Target repository')
+  .option('-u, --symbol-uid <uid>', 'Direct symbol UID for zero-ambiguity')
+  .option('-f, --file <path>', 'File path to disambiguate common names')
+  .option('--dry-run', 'Preview edits without modifying files (default: true)')
+  .option('--apply', 'Apply edits (overrides dry-run)')
+  .action(createLazyAction(() => import('./tool.js'), 'renameCommand'));
+
 // ─── Eval Server (persistent daemon for SWE-bench) ─────────────────
 
 program

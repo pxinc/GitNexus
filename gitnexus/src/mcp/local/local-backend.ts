@@ -1891,13 +1891,13 @@ export class LocalBackend {
     if (isClassLike) {
       try {
         // Run both incoming-ref queries in parallel — they are independent.
-        const [ctorIncoming, fileIncoming] = await Promise.all([
+        const [memberIncoming, fileIncoming] = await Promise.all([
           executeParameterized(
             repo.id,
             `
-            MATCH (n)-[hm:CodeRelation]->(ctor:Constructor)
+            MATCH (n)-[hm:CodeRelation]->(member)
             WHERE n.id = $symId AND hm.type = 'HAS_METHOD'
-            MATCH (caller)-[r:CodeRelation]->(ctor)
+            MATCH (caller)-[r:CodeRelation]->(member)
             WHERE r.type IN ['CALLS', 'IMPORTS', 'EXTENDS', 'IMPLEMENTS', 'ACCESSES']
             RETURN r.type AS relType, caller.id AS uid, caller.name AS name, caller.filePath AS filePath, labels(caller)[0] AS kind
             LIMIT 30
@@ -1924,7 +1924,7 @@ export class LocalBackend {
         const seenKeys = new Set(
           incomingRows.map((r: any) => `${r.relType || r[0]}:${r.uid || r[1]}`),
         );
-        for (const r of [...ctorIncoming, ...fileIncoming]) {
+        for (const r of [...memberIncoming, ...fileIncoming]) {
           const key = `${r.relType || r[0]}:${r.uid || r[1]}`;
           if (!seenKeys.has(key)) {
             seenKeys.add(key);
@@ -2707,23 +2707,23 @@ export class LocalBackend {
     let frontier = [symId];
     let traversalComplete = true;
 
-    // Fix #480: For Java (and other JVM) Class/Interface nodes, CALLS edges
-    // point to Constructor nodes and IMPORTS edges point to File nodes — not
-    // the Class/Interface itself. Seed the frontier with the Constructor(s)
-    // and owning File so the BFS traversal finds those edges naturally.
-    // The owning File is kept only as an internal seed (frontier/visited) and
-    // is NOT added to impacted — it is the definition container, not an
-    // upstream dependent. The BFS will discover IMPORTS edges on it naturally.
+    // Fix #480 + #3: For Class/Interface nodes, CALLS edges typically target
+    // member nodes (Constructors for JVM, Methods for TS/ArkTS/Python) rather
+    // than the Class itself. IMPORTS edges may target the owning File.
+    // Seed the frontier with ALL HAS_METHOD children and the owning File so
+    // the BFS traversal discovers callers/importers naturally.
+    // Seeded nodes are NOT added to impacted — they are part of the target
+    // symbol, not external dependents.
     if (symType === 'Class' || symType === 'Interface') {
       try {
         // Run both seed queries in parallel — they are independent.
-        const [ctorRows, fileRows] = await Promise.all([
+        const [memberRows, fileRows] = await Promise.all([
           executeParameterized(
             repo.id,
             `
-            MATCH (n)-[hm:CodeRelation]->(c:Constructor)
+            MATCH (n)-[hm:CodeRelation]->(m)
             WHERE n.id = $symId AND hm.type = 'HAS_METHOD'
-            RETURN c.id AS id, c.name AS name, labels(c)[0] AS type, c.filePath AS filePath
+            RETURN m.id AS id, m.name AS name, labels(m)[0] AS type, m.filePath AS filePath
           `,
             { symId },
           ),
@@ -2740,15 +2740,18 @@ export class LocalBackend {
           ),
         ]);
 
-        for (const r of ctorRows) {
+        for (const r of memberRows) {
           const rid = r.id || r[0];
+          // Add to frontier but NOT visited — seeded members should still
+          // appear in impacted when the BFS discovers them via HAS_METHOD.
           if (rid && !visited.has(rid)) {
-            visited.add(rid);
             frontier.push(rid);
           }
         }
         for (const r of fileRows) {
           const rid = r.id || r[0];
+          // Owning files are internal seeds — add to both frontier and visited
+          // so they don't pollute impacted (they are containers, not dependents).
           if (rid && !visited.has(rid)) {
             visited.add(rid);
             frontier.push(rid);
@@ -2762,15 +2765,15 @@ export class LocalBackend {
     for (let depth = 1; depth <= maxDepth && frontier.length > 0; depth++) {
       const nextFrontier: string[] = [];
 
-      // Batch frontier nodes into a single Cypher query per depth level
-      const idList = frontier.map((id) => `'${id.replace(/'/g, "''")}'`).join(', ');
+      // Use parameterized query to avoid write-detection false positives
+      // when node IDs contain keywords like "load" or "set" (#3).
       const query =
         direction === 'upstream'
-          ? `MATCH (caller)-[r:CodeRelation]->(n) WHERE n.id IN [${idList}] AND r.type IN [${relTypeFilter}]${confidenceFilter} RETURN n.id AS sourceId, caller.id AS id, caller.name AS name, labels(caller)[0] AS type, caller.filePath AS filePath, r.type AS relType, r.confidence AS confidence`
-          : `MATCH (n)-[r:CodeRelation]->(callee) WHERE n.id IN [${idList}] AND r.type IN [${relTypeFilter}]${confidenceFilter} RETURN n.id AS sourceId, callee.id AS id, callee.name AS name, labels(callee)[0] AS type, callee.filePath AS filePath, r.type AS relType, r.confidence AS confidence`;
+          ? `MATCH (caller)-[r:CodeRelation]->(n) WHERE n.id IN $ids AND r.type IN [${relTypeFilter}]${confidenceFilter} RETURN n.id AS sourceId, caller.id AS id, caller.name AS name, labels(caller)[0] AS type, caller.filePath AS filePath, r.type AS relType, r.confidence AS confidence`
+          : `MATCH (n)-[r:CodeRelation]->(callee) WHERE n.id IN $ids AND r.type IN [${relTypeFilter}]${confidenceFilter} RETURN n.id AS sourceId, callee.id AS id, callee.name AS name, labels(callee)[0] AS type, callee.filePath AS filePath, r.type AS relType, r.confidence AS confidence`;
 
       try {
-        const related = await executeQuery(repo.id, query);
+        const related = await executeParameterized(repo.id, query, { ids: frontier });
 
         for (const rel of related) {
           const relId = rel.id || rel[1];

@@ -946,7 +946,11 @@ export const processCalls = async (
       if (callExtractor) {
         const langCallSite = callExtractor.extract(callNode, undefined);
         if (langCallSite) {
-          if (provider.isBuiltInName(langCallSite.calledName)) return;
+          // Only filter built-in names for free calls (no receiver).
+          // Member calls (MRouter.push()) have a receiver that disambiguates
+          // from Array.prototype.push etc.
+          if (langCallSite.callForm !== 'member' && provider.isBuiltInName(langCallSite.calledName))
+            return;
 
           const sourceId =
             findEnclosingFunction(callNode, file.path, ctx, provider) ||
@@ -1099,7 +1103,12 @@ export const processCalls = async (
         }
       }
 
-      if (provider.isBuiltInName(calledName)) return;
+      if (provider.isBuiltInName(calledName)) {
+        // Only filter for free calls; member calls have a receiver that
+        // disambiguates (MRouter.push vs Array.push).
+        const earlyForm = inferCallForm(callNode, nameNode);
+        if (earlyForm !== 'member') return;
+      }
 
       // --- DAG stage 2-3: classify-form + infer-receiver (shared defaults) ---
       // These stages run the shared inference chain. Language providers can

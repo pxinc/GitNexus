@@ -97,6 +97,22 @@ describe('impact: batching and grouping', () => {
     executeParameterizedMock.mockImplementation(async (...args: any[]) => {
       const query = typeof args[1] === 'string' ? args[1] : String(args[0] ?? '');
       const params = args[2] || {};
+
+      // Depth traversal query (BFS) — now uses executeParameterized instead of executeQuery
+      if (query.includes('r.type IN') && !query.includes('STEP_IN_PROCESS')) {
+        const res: any[] = [];
+        for (let i = 0; i < 250; i++) {
+          res.push({
+            id: `node-${i}`,
+            name: `n${i}`,
+            filePath: `file-${i}.js`,
+            relType: 'CALLS',
+            confidence: null,
+          });
+        }
+        return res;
+      }
+
       if (query.includes('STEP_IN_PROCESS')) {
         // Count ids passed in as params.ids
         const ids = Array.isArray(params.ids) ? params.ids : [];
@@ -148,6 +164,19 @@ describe('impact: batching and grouping', () => {
 
     executeParameterizedMock.mockImplementation(async (...args: any[]) => {
       const query = typeof args[1] === 'string' ? args[1] : String(args[0] ?? '');
+      // Depth traversal (BFS) — return 6 nodes
+      if (query.includes('r.type IN') && !query.includes('STEP_IN_PROCESS')) {
+        const res: any[] = [];
+        for (let i = 0; i < 6; i++)
+          res.push({
+            id: `node-${i}`,
+            name: `n${i}`,
+            filePath: `file-${i}.js`,
+            relType: 'CALLS',
+            confidence: null,
+          });
+        return res;
+      }
       if (!query.includes('STEP_IN_PROCESS'))
         return [{ id: 'symA', name: 'TargetA', filePath: 'f' }];
       // For STEP_IN_PROCESS in this test, return grouping rows
@@ -263,6 +292,21 @@ describe('impact: batching and grouping', () => {
     executeParameterizedMock.mockImplementation(async (...args: any[]) => {
       const query = typeof args[1] === 'string' ? args[1] : String(args[0] ?? '');
       const params = args[2] || {};
+
+      // Depth traversal (BFS) — return 500 nodes
+      if (query.includes('r.type IN') && !query.includes('STEP_IN_PROCESS')) {
+        const res: any[] = [];
+        for (let i = 0; i < 500; i++)
+          res.push({
+            id: `node-${i}`,
+            name: `n${i}`,
+            filePath: `file-${i}.js`,
+            relType: 'CALLS',
+            confidence: null,
+          });
+        return res;
+      }
+
       if (query.includes('STEP_IN_PROCESS')) {
         const ids = Array.isArray(params.ids) ? params.ids : [];
         chunkSizes.push(ids.length);
