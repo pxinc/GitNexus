@@ -155,7 +155,7 @@ export function scanFile<TMeta>(
 ): ScanMatch<TMeta>[] {
   let tree: Parser.Tree;
   try {
-    parser.setLanguage(plugin.language);
+    parser.setLanguage(plugin.language as any);
     tree = parseSourceSafe(parser, content);
   } catch {
     return [];
